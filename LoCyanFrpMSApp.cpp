@@ -58,14 +58,22 @@ bool ifLogin = false; // 是否登录-t/f-默认f
 
 int main() // 主函数模块
 {
-	SetConsoleTitle(L"LoCyan Frp 智能控制面板"); // 设置标题
+	SetConsoleTitle(L"LoCyan Frp 智能控制面板"); // 设置标题（
 	HWND hWnd = GetConsoleWindow();
 	RECT rc;
 	GetWindowRect(hWnd, &rc);
 	SetWindowLongPtr(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX & ~WS_MINIMIZEBOX);
 	SetWindowPos(hWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, NULL); // 设置窗口长宽高
 	system("mode con cols=119 lines=35"); // 设置窗口长宽高
-
+	
+	fin.open("AppLogin.dll"); // 打开文件
+	fin >> ifLogin ; // 获取是否登录
+	if (ifLogin)
+	{
+		fin >> UserInternalID; // 如已登录，获取 Frp 的 Token
+	}
+	fin.close();
+	
 	PrintGUI(); // 打印 GUI
 	while (true)
 	{

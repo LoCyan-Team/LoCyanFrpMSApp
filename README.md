@@ -27,7 +27,7 @@
 * Visual Studio（安装 C++ 与 C，并手动配置 MySql）
 * Python 3.8
 
-编译 LoCyanFrpMSApp.cpp 与 Core.py ，均编译完成后放在同一目录下，运行 LoCyanFrpMSAp.exe！
+编译 LoCyanFrpMSApp.cpp 与 Core.py ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe！
 
 ### 关于
 

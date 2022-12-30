@@ -4,7 +4,7 @@
 
 使用 **C++ 程序**为主程序，**C 程序**为辅助模块，**Python 程序**为辅助程序。
 
-连接 [LoCyan API](https://github.com/Daiyangcheng/LoCyanFrpAPI)。
+连接 [LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)。
 
 使用文件为不同语言程序之间的交流，让您获得流畅体验！
 
@@ -28,7 +28,7 @@
 * MySql
 * Visual Studio（安装 C++ 与 C，并手动配置 MySql）
 * Python 3.8
-* [LoCyanAPI](https://github.com/Daiyangcheng/LoCyanFrpAPI)
+* [LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)
 
 编译 LoCyanFrpMSApp.cpp 与 Core.py ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe！
 
@@ -57,7 +57,7 @@
 * Core.exe 更新
 * 显示程序版本、开发者、一些超链接
 * 设计安装包
-* 不适用 LoCyanFrp MySql
+* 不使用 LoCyanFrp MySql
 
 注：已完成：**$\color{green}{绿色}$** | 正在完成：**$\color{red}{红色}$** | 已放弃：**$\color{blue}{绿色}$**
 

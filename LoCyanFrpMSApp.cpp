@@ -56,6 +56,7 @@ void PrintTunnelList(); // 打印隧道列表
 void GetNode(); // 获取节点列表
 void GetTunnel(); // 获取隧道列表
 void Delete(); // 删除隧道模块
+void Create(); // 创建隧道模块
 void color(short attr); // 输出彩色文字
 void Cout(int x, char a); // 连续输出 x 次 a
 void print(string s, int a, int b); // 输出提示语
@@ -64,11 +65,12 @@ bool file(string filename); // 判断文件是否存在
 int numlen(int num); // 获取一个数字的长度（位数）
 string Json(string json, string project); // 获取 Json 某个项的值
 string FromIDFindNodeName(int id); // 根据节点 ID 找名字
+string LTS(string s); // 大写转小写
 LPCWSTR stringToLPCWSTR(string orig); // LPCWSTR -> String
 
 string UserInternalID, name, password; // 定义：name-用户名 | password-密码 | UserInternalID-FrpToken
 bool ifLogin = false/* 是否已登录 */,ifCore = false /* 有没有下载辅助模块 */ ;
-int Node_quantity/* 隧道数量 */, MyTunnelLen/* 用户的隧道数量 */;
+int Node_quantity/* 节点数量 */, MyTunnelLen/* 用户的隧道数量 */;
 
 struct Nodeinfo // 节点信息
 {
@@ -83,7 +85,7 @@ struct Tunnelinfo
 
 int main() // 主函数模块
 {
-	SetConsoleTitle(L"LoCyan Frp 智能控制面板"); // 设置标题
+	SetConsoleTitle(L"LoCyanFrpMSApp"); // 设置标题
 	HWND hWnd = GetConsoleWindow();
 	RECT rc;
 	GetWindowRect(hWnd, &rc);
@@ -390,11 +392,11 @@ void PrintGUI2(bool ifGetNode) // 隧道管理选择模块
 			switch (a)
 			{
 				case 'D': Delete(); break;
-				case 'C': break;
+				case 'C': Create(); break;
 				case 'O': break;
 				case 'R': system("cls"); PrintGUI(); return; break;
 				case 'd': Delete(); break;
-				case 'c': break;
+				case 'c': Create(); break;
 				case 'o': break;
 				case 'r': system("cls"); PrintGUI(); return; break;
 			}
@@ -405,7 +407,12 @@ void PrintGUI2(bool ifGetNode) // 隧道管理选择模块
 }
 void PrintNodeList() // 打印节点列表
 {
-	Cout(119, '-');
+	color(9);
+	Cout(48, '-');
+	color(5);
+	cout << "LoCyan Frp 智能控制面板";
+	color(9);
+	Cout(48, '-');
 	cout << endl;
 	string a = "节点 ID", b = "节点名称", c = "节点 IP";
 	int len = a.length();
@@ -515,7 +522,12 @@ void PrintNodeList() // 打印节点列表
 }
 void PrintTunnelList() // 打印隧道列表
 {
-	Cout(119, '-');
+	color(9);
+	Cout(48, '-');
+	color(5);
+	cout << "LoCyan Frp 智能控制面板";
+	color(9);
+	Cout(48, '-');
 	cout << endl;
 	string a = "隧道 ID", b = "隧道名称", c = "隧道信息", d = "是否加密", e = "是否压缩", f = "使用节点";
 	int len = a.length();
@@ -689,7 +701,6 @@ void PrintTunnelList() // 打印隧道列表
 				if (Tunnel[i].Protocol == "http")
 				{
 					cout << "Http";
-					len++;
 				}
 				else {
 					cout << "Https";
@@ -829,7 +840,15 @@ void GetNode() // 获取节点列表
 	fout << 1; // 对暗号。。。
 	fout.close();
 	system("start Core.exe");
-	Sleep(5000); // 给他缓个 5 秒
+	while (true) // 智能等待
+	{
+		if (file("ServerList.sys"))
+		{
+			break;
+		}
+		Sleep(20);
+	}
+	Sleep(5000);
 	fin.open("ServerList.sys");
 	fin >> Node_quantity; // 输入隧道数量
 	for (int i = 0; i < Node_quantity; i++)
@@ -874,7 +893,15 @@ void GetTunnel() // 获取隧道列表
 	fout << 2 << endl << UserInternalID; // 对暗号。。。
 	fout.close();
 	system("start Core.exe");
-	Sleep(5000); // 给他缓个 5 秒
+	while (true) // 智能等待
+	{
+		if (file("MyServerList.dll"))
+		{
+			break;
+		}
+		Sleep(20);
+	}
+	Sleep(5000);
 	fin.open("MyServerList.dll");
 	fin >> MyTunnelLen; // 用户的隧道数量
 	for (int i = 0; i < MyTunnelLen; i++)
@@ -926,12 +953,6 @@ void Delete() // 删除隧道模块
 	GetTunnel();
 	PrintTunnelList();
 	string TunnelID, token, Return;
-	color(9);
-	Cout(48, '-');
-	color(5);
-	cout << "LoCyan Frp 智能控制面板";
-	color(9);
-	Cout(48, '-');
 	cout << "|";
 	Cout(117, ' ');
 	cout << "|\n|";
@@ -951,7 +972,7 @@ void Delete() // 删除隧道模块
 	cout << "|\n";
 	Cout(119, '-');
 	HANDLE hout;
-	COORD coord = { 47 , MyTunnelLen + 6 };
+	COORD coord = { 47 , MyTunnelLen + 5 };
 	hout = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleCursorPosition(hout, coord); // 在第 35 行，第 MyTunnelLen + 6 列插入文字
 	cout << "要删除的隧道 ID：";
@@ -971,6 +992,174 @@ void Delete() // 删除隧道模块
 	else if (Return == "-2")
 	{
 		print("未知错误！", 53, 54);
+	}
+	Sleep(2000);
+	system("cls");
+	PrintGUI2(true);
+	return;
+}
+void Create() // 创建隧道模块
+{
+	string Tunnel_name, InlineIP, Protocol, InlinePort, OnlinePort, HTTPSdoname, token, Compress = "0", Encrypt = "0", ServerID, TryGet, Return;
+	system("cls");
+	PrintNodeList();
+	cout << "|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(42, ' ');
+	color(4);
+	cout << "每项内容填好后请按 “回车” 键";
+	color(9);
+	Cout(45, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n";
+	Cout(119, '-');
+	HANDLE hout1;
+	COORD coord1 = { 50 , Node_quantity + 4 };
+	hout1 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout1, coord1);
+	cout << "隧道名：";
+	cin >> Tunnel_name;
+	HANDLE hout2;
+	COORD coord2 = { 50 , Node_quantity + 5 };
+	hout2 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout2, coord2);
+	cout << "内网 IP：";
+	cin >> InlineIP;
+	HANDLE hout3;
+	COORD coord3 = { 50 , Node_quantity + 6 };
+	hout3 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout3, coord3);
+	cout << "隧道类型：";
+	cin >> Protocol;
+	Protocol = LTS(Protocol);
+	HANDLE hout4;
+	COORD coord4 = { 50 , Node_quantity + 7 };
+	hout4 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout4, coord4);
+	cout << "内网端口：";
+	cin >> InlinePort;
+	HANDLE hout5;
+	COORD coord5 = { 50 , Node_quantity + 8 };
+	hout5 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout5, coord5);
+	cout << "外网端口：";
+	cin >> OnlinePort;
+	string TF;
+	HANDLE hout6;
+	COORD coord6 = { 50 , Node_quantity + 9 };
+	hout6 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout6, coord6);
+	cout << "是否压缩：";
+	cin >> TF;
+	if (TF == "是")
+	{
+		Compress = "1";
+	}
+	HANDLE hout7;
+	COORD coord7 = { 50 , Node_quantity + 10 };
+	hout7 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout7, coord7);
+	cout << "是否加密：";
+	cin >> TF;
+	if (TF == "是")
+	{
+		Encrypt = "1";
+	}
+	HANDLE hout8;
+	COORD coord8 = { 50 , Node_quantity + 11 };
+	hout8 = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout8, coord8);
+	cout << "节点 ID：";
+	cin >> ServerID;
+	if (Protocol == "tcp")
+	{
+		Protocol = "1";
+	}
+	else if (Protocol == "udp")
+	{
+		Protocol = "2";
+	}
+	else if (Protocol == "http")
+	{
+		Protocol = "3";
+	}
+	else if (Protocol == "https")
+	{
+		Protocol = "4";
+	}
+	else if (Protocol == "xtcp")
+	{
+		Protocol = "5";
+	}
+	else if (Protocol == "stcp")
+	{
+		Protocol = "6";
+	}
+	system("cls");
+	print("正在创建隧道", 52, 53);
+	TryGet = "https://api.locyanfrp.cn/Proxies/add?username=" + name + "&name=" + Tunnel_name + "&key=" + UserInternalID + "&ip=" + InlineIP + "&type=" + Protocol + "&lp=" + InlinePort + "&rp=" + OnlinePort + "&ue=" + Encrypt + "&uz=" + Compress + "&id=" + ServerID;
+	if (Protocol == "https" || Protocol == "http")
+	{
+		HANDLE hout9;
+		COORD coord9 = { 50 , Node_quantity + 12 };
+		hout9 = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleCursorPosition(hout9, coord9);
+		cout << "绑定域名：";
+		cin >> HTTPSdoname;
+		TryGet = TryGet + "&url=" + HTTPSdoname;
+	}
+	TryGet = TryGet + "&token=" + Json(Get("https://api.locyanfrp.cn/User/DoLogin?username=" + name + "&password=" + password).GetText(), "token");
+	Return = Json(Get(TryGet).GetText(), "status");
+	system("cls");
+	if (Return == "0")
+	{
+		print("创建成功！", 53, 54);
+	}
+	else if (Return == "-1")
+	{
+		print("隧道类型错误！", 51, 52);
+	}
+	else if (Return == "-2")
+	{
+		print("信息不完整！", 52, 53);
+	}
+	else if (Return == "-3")
+	{
+		print("远程端口被占用！", 50, 51);
+	}
+	else if (Return == "-4")
+	{
+		print("远程端口属于保留范围！",47, 48);
+	}
+	else if (Return == "-5")
+	{
+		print("未知错误！", 53, 54);
+	}
+	else if (Return == "-6")
+	{
+		print("隧道名被占用！", 51, 52);
 	}
 	Sleep(2000);
 	system("cls");
@@ -1073,11 +1262,13 @@ void no() // 暂时不用临时代码存放位
 
 bool file(string filename) // 判断 filename 存不存在
 {
-	_file.open("Core.exe", ios::in);
+	_file.open(filename, ios::in);
 	if (!_file)
 	{
+		_file.close();
 		return false;
 	}
+	_file.close();
 	return true;
 }
 
@@ -1112,14 +1303,25 @@ string Json(string json , string project) // 获取 json 的 project 项的值
 }
 string FromIDFindNodeName(int id) // 根据节点 ID 找名字
 {
-	for (int i = 0; i < Node_quantity; i++)
+	for (int i = 0; i <= Node_quantity; i++)
 	{
 		if (Node[i].ID == id)
 		{
 			return Node[i].Name;
 		}
 	}
-	return "程序出现错误！";
+	return "节点获取失败！";
+}
+string LTS(string s) // 大写 -> 小写
+{
+	for (int i = 0; i < s.size(); i++)
+	{
+		if (s[i] >= 'A' && s[i] <= 'Z')
+		{
+			s[i] += 32;
+		}
+	}
+	return s;
 }
 
 LPCWSTR stringToLPCWSTR(string orig) // 将 LPCWSTR 形式的字符串转化为 String 形式的字符串

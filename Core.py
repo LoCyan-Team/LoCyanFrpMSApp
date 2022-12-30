@@ -18,11 +18,11 @@ try:
     http.request('GET', 'https://api.locyanfrp.cn')
 
     db = mysql.connector.connect(
-        host="",
-        port=,
-        user="",
-        passwd="",
-        database=""
+            host="",
+            port=,
+            user="",
+            passwd="",
+            database=""
     )
     db_connect = True
 except:
@@ -91,14 +91,14 @@ elif action == "2":  # 获取用户隧道
         else:
             uz = "0"
 
-        if domain == "":
+        if domain == "" or domain is None:
             file.write(str(i[0]) + " " + i[2] + " " + str(i[5]) + " " + str(i[11]) + " " + i[3] + " " + str(
                 i[16]) + " " + ue + " " + uz + " " + "0" + " " + i[4] + "\n")
         else:
             domain = domain.replace('["', '')
             domain = domain.replace('"]', '')
             file.write(str(i[0]) + " " + i[2] + " " + str(i[5]) + " " + str(i[11]) + " " + i[3] + " " + str(
-                i[16]) + " " + ue + " " + uz + " " + "1" + domain + " " + i[4] + "\n")
+                i[16]) + " " + ue + " " + uz + " " + "1" + " " + domain + " " + i[4] + "\n")
 
     file.close()
 else:

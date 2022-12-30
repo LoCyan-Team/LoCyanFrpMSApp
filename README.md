@@ -32,7 +32,7 @@
 
 编译 LoCyanFrpMSApp.cpp 与 Core.py ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe！
 
-### 更新方案
+### 更新方向
 
 #### 正式版本更新方向：
 

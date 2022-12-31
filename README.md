@@ -61,6 +61,11 @@
 
 注：已完成：**$\color{green}{绿色}$** | 正在完成：**$\color{red}{红色}$** | 已放弃：**$\color{blue}{绿色}$**
 
+### 已知 Bug
+
+* Core 获取隧道与节点速度太慢
+* C++ 删除隧道回到主面板后按键无效
+
 ### 关于
 
 Powered by Daiyangcheng ( QQ:3143105972 ) and Zhiyuan ( QQ:3520974066 )!

@@ -6,12 +6,6 @@ import mysql.connector
 import ctypes
 import urllib3
 
-# 隐藏python窗口
-whnd = ctypes.windll.kernel32.GetConsoleWindow()
-if whnd != 0:
-    ctypes.windll.user32.ShowWindow(whnd, 0)
-    ctypes.windll.kernel32.CloseHandle(whnd)
-
 # 连接数据库
 try:
     http = urllib3.PoolManager()

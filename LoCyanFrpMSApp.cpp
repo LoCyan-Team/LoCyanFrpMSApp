@@ -68,18 +68,18 @@ string FromIDFindNodeName(int id); // 根据节点 ID 找名字
 string LTS(string s); // 大写转小写
 LPCWSTR stringToLPCWSTR(string orig); // LPCWSTR -> String
 
-string UserInternalID, name, password; // 定义：name-用户名 | password-密码 | UserInternalID-FrpToken
+string UserInternalID/* FrpToken */, name/* 用户名 */, password/* 密码 */;
 bool ifLogin = false/* 是否已登录 */,ifCore = false /* 有没有下载辅助模块 */ ;
 int Node_quantity/* 节点数量 */, MyTunnelLen/* 用户的隧道数量 */;
 
 struct Nodeinfo // 节点信息
 {
-	int ID;
+	int ID = 0;
 	string Name, IP;
 }Node[100010];
 struct Tunnelinfo
 {
-	int ID, Node, a, b;
+	int ID = 0, Node = 0, a = 0, b = 0;
 	string Name, Protocol, IP, url, internal_port, external_port;
 }Tunnel[100010];
 
@@ -111,8 +111,8 @@ int main() // 主函数模块
 			{
 				case '1':login(); break;
 				case '2':Unlogin(); break;
-				case '3':PrintGUI2(false); break;
-				case '4':
+				case '3':PrintGUI2(false); PrintGUI(); break;
+				case '4':break;
 				case '5':return 0; break;
 			}
 		}
@@ -328,7 +328,7 @@ void PrintGUI2(bool ifGetNode) // 隧道管理选择模块
 		Cout(117, ' ');
 		cout << "|\n";
 		Cout(119, '-');
-		URLDownloadToFile(nullptr, L"https://download.locyan.cn/d/Core.exe", L"DownLoadTEMP", 0, nullptr);
+		URLDownloadToFile(nullptr, L"https://download.locyan.cn/d/LoCyanFrpMSApp/Core.exe", L"DownLoadTEMP", 0, nullptr);
 		system("rename DownLoadTEMP Core.exe");
 		system("cls");
 	}
@@ -394,11 +394,11 @@ void PrintGUI2(bool ifGetNode) // 隧道管理选择模块
 				case 'D': Delete(); break;
 				case 'C': Create(); break;
 				case 'O': break;
-				case 'R': system("cls"); PrintGUI(); return; break;
+				case 'R': system("cls"); return;
 				case 'd': Delete(); break;
 				case 'c': Create(); break;
 				case 'o': break;
-				case 'r': system("cls"); PrintGUI(); return; break;
+				case 'r': system("cls"); return;
 			}
 		}
 		Sleep(20);
@@ -839,16 +839,7 @@ void GetNode() // 获取节点列表
 	fout.open("SQLTransmission.sys");
 	fout << 1; // 对暗号。。。
 	fout.close();
-	system("start Core.exe");
-	while (true) // 智能等待
-	{
-		if (file("ServerList.sys"))
-		{
-			break;
-		}
-		Sleep(20);
-	}
-	Sleep(5000);
+	system("Core");
 	fin.open("ServerList.sys");
 	fin >> Node_quantity; // 输入隧道数量
 	for (int i = 0; i < Node_quantity; i++)
@@ -892,16 +883,7 @@ void GetTunnel() // 获取隧道列表
 	fout.open("SQLTransmission.sys");
 	fout << 2 << endl << UserInternalID; // 对暗号。。。
 	fout.close();
-	system("start Core.exe");
-	while (true) // 智能等待
-	{
-		if (file("MyServerList.dll"))
-		{
-			break;
-		}
-		Sleep(20);
-	}
-	Sleep(5000);
+	system("Core");
 	fin.open("MyServerList.dll");
 	fin >> MyTunnelLen; // 用户的隧道数量
 	for (int i = 0; i < MyTunnelLen; i++)
@@ -1117,10 +1099,8 @@ void Create() // 创建隧道模块
 	{
 		Protocol = "6";
 	}
-	system("cls");
-	print("正在创建隧道", 52, 53);
 	TryGet = "https://api.locyanfrp.cn/Proxies/add?username=" + name + "&name=" + Tunnel_name + "&key=" + UserInternalID + "&ip=" + InlineIP + "&type=" + Protocol + "&lp=" + InlinePort + "&rp=" + OnlinePort + "&ue=" + Encrypt + "&uz=" + Compress + "&id=" + ServerID;
-	if (Protocol == "https" || Protocol == "http")
+	if (Protocol == "3" || Protocol == "4")
 	{
 		HANDLE hout9;
 		COORD coord9 = { 50 , Node_quantity + 12 };
@@ -1130,6 +1110,8 @@ void Create() // 创建隧道模块
 		cin >> HTTPSdoname;
 		TryGet = TryGet + "&url=" + HTTPSdoname;
 	}
+	system("cls");
+	print("正在创建隧道", 52, 53);
 	TryGet = TryGet + "&token=" + Json(Get("https://api.locyanfrp.cn/User/DoLogin?username=" + name + "&password=" + password).GetText(), "token");
 	Return = Json(Get(TryGet).GetText(), "status");
 	system("cls");

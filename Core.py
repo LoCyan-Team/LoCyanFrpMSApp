@@ -1,37 +1,65 @@
-import json
 import requests
-import sys
 import os
-import mysql.connector
-import ctypes
 import urllib3
+import time
 
-# 连接数据库
+# 启动时删除上一次的日志文件，防止堆积
+os.remove("./Logs/Core.log")
+
+# 创建日志文件并写入
+def writelog(message):
+    # 第一次启动创建日志目录
+    logs_dir_status = os.path.exists("./Logs")
+    if logs_dir_status is False:
+        os.mkdir("./Logs")
+    # 软件运行过程中检测是第一次执行还是第N+1次执行，保证日志文件不被覆盖
+    logs_status = os.path.exists("./Logs/Core.log")
+    if logs_status is False:
+        # w+ 可以新建文件的读写模式
+        logs = open("./Logs/Core.log", "w+", encoding="ansi")
+    else:
+        # a+ 可以追加内容的读写模式
+        logs = open("./Logs/Core.log", "a+", encoding="ansi")
+    logs.write("[" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "]" + message + "\n")
+    logs.close()
+
+
+writelog("Launching Python Core...")
+writelog("Starting to check the config...")
+
+bat_status = os.path.exists("./Logs/点我打开 Core 日志.bat")
+if bat_status is False:
+    writelog("It is the first launching , create the control bat file successfully!")
+    f = open("./Logs/点我打开 Core 日志.bat", "w+", encoding="ansi")
+    f.write("taskkill /f /im Core.exe\nnotepad Core.exe")
+    f.close()
+
+# 连接API准备工作
+api_url = "https://api.locyanfrp.cn"
 try:
-    http = urllib3.PoolManager()
-    http.request('GET', 'https://api.locyanfrp.cn')
-
-    db = mysql.connector.connect(
-            host="",
-            port=,
-            user="",
-            passwd="",
-            database=""
-    )
-    db_connect = True
+    writelog("Starting to init the requests...")
+    # 关闭keep-alive
+    s = requests.session()
+    s.keep_alive = False
+    # 设置重连次数为5
+    requests.DEFAULT_RETRIES = 5
+    # 关闭urllib3 不验证SSL产生的报错
+    urllib3.disable_warnings()
 except:
-    db_connect = False
+    writelog("Failed, Stopping the Python Core...")
+    exit()
 
 
 def getnamebycode(code):  # 通过token获取用户名
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM tokens WHERE `token` = " + "'" + code + "';")
-    result = cursor.fetchall()
-    for i in result:
-        print(i[1])
-        return i[1]
+    url = api_url + "/Account/GetUserNameByFrpToken?token=" + code
+    rs = requests.get(url, verify=False).json()
+    if rs["status"] != 0:
+        return 0
+    else:
+        return rs["username"]
 
 
+# 主程序
 f = open("SQLTransmission.sys", "r", encoding="ansi")
 a = f.read()
 text = a.split("\n")
@@ -39,63 +67,59 @@ action = text[0]
 
 if action == "1":  # 获取服务器列表
     # 获取文件路径
-    filepath = os.getcwd() + "\\" + "ServerList.sys"
+    filepath = os.getcwd() + "\\" + "ServerList.dll"
     # 创建文件
     file = open(filepath, "w", encoding="ansi")
-    # 数据库获取信息
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM nodes")
-    result = cursor.fetchall()
+    url = api_url + "/Proxies/GetServerList"
+
+    rs = requests.get(url, verify=False).json()
     # 将信息写入
-    file.write(str(len(result)) + "\n")  # 加入服务器数量
-    for i in result:
-        file.write(str(i[0]) + " " + i[1] + " " + i[3] + "\n")
+    file.write(str(len(rs)) + "\n")  # 加入服务器数量
+    for i in rs:
+        file.write(str(i["id"]) + " " + i["name"] + " " + i["hostname"] + "\n")
+    writelog("Getting Server List Successfully")
     file.close()
 
 elif action == "2":  # 获取用户隧道
-
+    writelog("Starting to get user's proxies")
     user = getnamebycode(text[1])
-
     # 获取文件路径
     filepath = os.getcwd() + "\\" + "MyServerList.dll"
     # 创建文件
-    file = open(filepath, "w", encoding="ansi")
+    file = open(filepath, "w+", encoding="ansi")
     # 数据库获取信息
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM proxies WHERE `username` = " + "'" + user + "';")
-    result = cursor.fetchall()
 
-    file.write(str(len(result)) + "\n")  # 加入隧道数量
-
-    if len(result) == 0:  # 若没有隧道则直接结束运行
-        sys.exit()
-    print(result)
-    for i in result:
-        ue = i[6]
-        uz = i[7]
-        domain = i[8]
-
-        if ue == "true":
-            ue = "1"
-        else:
-            ue = "0"
-
-        if uz == "true":
-            uz = "1"
-        else:
-            uz = "0"
-
-        if domain == "" or domain is None:
-            file.write(str(i[0]) + " " + i[2] + " " + str(i[5]) + " " + str(i[11]) + " " + i[3] + " " + str(
-                i[16]) + " " + ue + " " + uz + " " + "0" + " " + i[4] + "\n")
-        else:
-            domain = domain.replace('["', '')
-            domain = domain.replace('"]', '')
-            file.write(str(i[0]) + " " + i[2] + " " + str(i[5]) + " " + str(i[11]) + " " + i[3] + " " + str(
-                i[16]) + " " + ue + " " + uz + " " + "1" + " " + domain + " " + i[4] + "\n")
-
+    url = api_url + "/Proxies/GetProxiesListByUsername?username=" + user
+    rs = requests.get(url, verify=False).json()
+    file.write(str(len(rs["proxies"])) + "\n")
+    if rs["status"] == 0:
+        # rs["proxies"]为一个数组
+        for i in rs["proxies"]:
+            ue = i["use_encryption"]
+            uc = i["use_compression"]
+            domain = i["domain"]
+            # 转换格式
+            if ue == "true":
+                ue = "1"
+            else:
+                ue = "0"
+            if uc == "true":
+                uc = "1"
+            else:
+                uc = "0"
+            if domain == "" or domain is None:
+                file.write(file.read() + str(i["id"]) + " " + i["proxy_name"] + " " + str(i["local_ip"]) + " " + str(i["remote_port"]) + " " + i["proxy_type"] + " " + str(
+                    i["node"]) + " " + ue + " " + uc + " " + "0" + " " + i["local_ip"] + "\n")
+            else:
+                domain = domain.replace('["', '')
+                domain = domain.replace('"]', '')
+                file.write(file.read() + str(i["id"]) + " " + i["proxy_name"] + " " + str(i["local_ip"]) + " " + str(i["remote_port"]) + " " + i["proxy_type"] + " " + str(
+                    i["node"]) + " " + ue + " " + uc + " " + "0" + " " + domain + " " + i["local_ip"] + "\n")
+        writelog("Getting proxies successfully")
+    else:
+        writelog("Getting user's proxies failed, they dont have proxies now!")
+        exit()
     file.close()
 else:
-    print("failed execute this document")
+    writelog("failed execute this document")
 f.close()
-db.close()

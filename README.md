@@ -14,10 +14,7 @@
 - [X] Windows 10
 - [X] Windows 8.1
 - [X] Windows 8
-- [X] Windows 7
-- [X] Windows Vista
-- [X] Windows XP
-- [X] Windows 2000 及以下（理论上可以，未经测试，**$\color{red}{如果出事，概不负责！}$**）
+- [X] Windows 7 x64
 
 ### 安装
 

@@ -2,11 +2,9 @@
 
 一个小而精致的 LoCyanFrp 隧道启动、管理器，全名为 **LoCyanFrp Manager and Start App**。
 
-使用 **C++ 程序**为主程序，**C 程序**为辅助模块，**Python 程序**为辅助程序。
+使用 **C++ 程序**为主程序，**C 程序**为辅助模块。
 
-连接 [LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)。
-
-使用文件为不同语言程序之间的交流，让您获得流畅体验！
+连接 **[LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)**。
 
 ### 支持的系统
 

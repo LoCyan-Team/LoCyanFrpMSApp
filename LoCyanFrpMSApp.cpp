@@ -1436,9 +1436,25 @@ inline void End() // 关闭映射模块
 		return;
 	}
 	print("正在关闭中...", 52, 52);
-	if (ifOnline(id)) // 离线
+	if (!ifOnline(id)) // 离线
 	{
 		print("该隧道已离线！", 51, 52);
+		Tunnel[FromIDFindTTunnelLen(id)].online = false;
+		int j = 0;
+		for (int i = 0; i < OnlineLen; i++) {
+			if (Online[i] != id)
+			{
+				Online[j++] = Online[i];
+			}
+		}
+		OnlineLen--;
+		fout.open("OnlineTunnel.list"); // 打开文件
+		fout << OnlineLen << '\n'; // 获取是否登录
+		for (int i = 0; i < OnlineLen; i++)
+		{
+			fout << Online[i] << " ";
+		}
+		fin.close();
 		Sleep(2000);
 		system("cls");
 		return;
@@ -1539,15 +1555,9 @@ inline void Unlogin() // 退出登录模块
 	cout << "|\n|";
 	Cout(117, ' ');
 	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n";
 	Cout(119, '-');
 	Sleep(2000);
-	HANDLE hout;
-	COORD coord = { 45 , 3 };
-	hout = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleCursorPosition(hout, coord);
-	system("del /f /s /q AppLogin.dll"); // 把登陆文件删了
+	system("del /f /s /q AppLogin.dll>nul"); // 把登陆文件删了
 	ifLogin = false; // 不要忘记再把变量清了
 	system("cls");
 	return;

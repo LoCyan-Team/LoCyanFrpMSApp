@@ -38,6 +38,7 @@
 #include <windows.h> // cmd
 #include <cstdio> // scanf / printf
 #include <conio.h> // 识别按键模块
+#include <direct.h> // 文件夹创建模块
 #include "requests.h" // 爬取网页模块
 #include "utils.h" // requests.h 的前置
 #pragma comment(lib, "Urlmon.lib")
@@ -48,60 +49,105 @@ ofstream fout;
 ifstream fin;
 fstream _file;
 
-void login(); // 登录模块
-void PrintGUI(); // 显示 GUI
-void PrintGUI2(bool ifGetNode); // 显示隧道管理选择模块
-void PrintNodeList(); // 打印节点列表
-void PrintTunnelList(); // 打印隧道列表
-void GetNode(); // 获取节点列表
-void GetTunnel(); // 获取隧道列表
-void Delete(); // 删除隧道模块
-void Create(); // 创建隧道模块
-void color(short attr); // 输出彩色文字
-void Cout(int x, char a); // 连续输出 x 次 a
-void print(string s, int a, int b); // 输出提示语
-void Unlogin(); // 登出模块
-bool file(string filename); // 判断文件是否存在
-int numlen(int num); // 获取一个数字的长度（位数）
-string Json(string json, string project); // 获取 Json 某个项的值
-string FromIDFindNodeName(int id); // 根据节点 ID 找名字
-string LTS(string s); // 大写转小写
-LPCWSTR stringToLPCWSTR(string orig); // LPCWSTR -> String
-
+inline void main2(); // 隧道管理选择模块
+inline void main3(); // 映射选项选择模块
+inline void login(); // 登录模块
+inline void PrintGUI1(); // 显示 GUI
+inline void PrintGUI2(); // 显示隧道管理模块 GUI
+inline void PrintGUI3(); // 显示映射选项模块 GUI
+inline void PrintNodeList(); // 打印节点列表
+inline void PrintTunnelList(bool must_online, bool must_offline); // 打印隧道列表
+inline void GetNode(); // 获取节点列表
+inline void GetTunnel(); // 获取隧道列表
+inline void Delete(); // 删除隧道模块
+inline void Create(); // 创建隧道模块
+inline void Start(); // 启动映射模块
+inline void End(); // 关闭映射模块
+inline void color(short attr); // 输出彩色文字
+inline void Cout(int x, char a); // 连续输出 x 次 a
+inline void print(string s, int a, int b); // 输出提示语
+inline void Unlogin(); // 登出模块
+inline bool file(string filename); // 判断文件是否存在
+inline bool ifTunnel(int id); // 判断隧道是否存在
+inline bool ifNode(int id); // 判断节点是否存在 True
+inline bool ifOnline(int id); // 获取隧道在线状态
+inline int numlen(int num); // 获取一个数字的长度（位数）
+inline int FromIDFindNodeID(int id); // 根据隧道 ID 找节点 ID
+inline int FromIDFindTTunnelLen(int id); // 根据隧道 ID 找数组下标
+inline string DEC(string url, char c); // 删除转义符
+inline string Json(string json, string project); // 获取 Json 某个项的值
+inline string FromIDFindNodeName(int id); // 根据节点 ID 找名字
+inline string FromIDFindNodeUrl(int id); // 根据节点 ID 找地址
+inline string FromIDFindTunnelName(int id); // 根据隧道 ID 找名字
+inline string FromIDFindProtocol(int id); // 根据隧道 ID 找隧道协议
+inline string LTS(string s); // 大写转小写
+inline string UTF8ToANSI(string s);  // 编码转换
+inline LPCWSTR stringToLPCWSTR(string orig); // LPCWSTR -> String
 string UserInternalID/* FrpToken */, name/* 用户名 */, password/* 密码 */;
-bool ifLogin = false/* 是否已登录 */,ifCore = false /* 有没有下载辅助模块 */ ;
-int Node_quantity/* 节点数量 */, MyTunnelLen/* 用户的隧道数量 */;
+bool ifLogin = false/* 是否已登录 */, ifAuxiliary = false /* 有没有下载辅助模块 */;
+int StartingTunnelList[100010], Node_quantity/* 节点数量 */, MyTunnelLen/* 用户的隧道数量 */, TestLen = 0/* 特殊情况下 PrintTunnelList 输出的隧道数 */, OnlineLen = 0/* 在线隧道数 */, Online[100010] = {}/* 在线隧道 */;
 
 struct Nodeinfo // 节点信息
 {
 	int ID = 0;
-	string Name, IP;
+	string Name, IP, RealIP;
 }Node[100010];
 struct Tunnelinfo
 {
+	bool online = false;
 	int ID = 0, Node = 0, a = 0, b = 0;
 	string Name, Protocol, IP, url, internal_port, external_port;
 }Tunnel[100010];
 
 int main() // 主函数模块
 {
-	SetConsoleTitle(L"LoCyanFrpMSApp"); // 设置标题
+	print("正在初始化程序", 51, 52);
+	SetConsoleTitle(L"LoCyanFrp 智能控制面板"); // 设置标题
 	HWND hWnd = GetConsoleWindow();
 	RECT rc;
 	GetWindowRect(hWnd, &rc);
 	SetWindowLongPtr(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX & ~WS_MINIMIZEBOX);
 	SetWindowPos(hWnd, NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, NULL); // 设置窗口长宽高
-	system("mode con cols=119 lines=35"); // 设置窗口长宽高
+	auto hStdin = ::GetStdHandle(STD_INPUT_HANDLE);
+	DWORD mode; 
+	::GetConsoleMode(hStdin, &mode); // 禁止左键选择
+	mode &= ~ENABLE_QUICK_EDIT_MODE;
+	::SetConsoleMode(hStdin, mode);
+	system("mode con cols=119 lines=30"); // 设置窗口长宽高
+	system("cls");
+	print("正在执行初始化", 51, 52);
 
-	fin.open("AppLogin.dll"); // 打开文件
-	fin >> ifLogin ; // 获取是否登录
-	if (ifLogin)
+	if (file("AppLogin.dll")) // 判断 FrpAuxiliaryApp.exe 是否存在，存在就读取
 	{
-		fin >> UserInternalID >> name >> password; // 如已登录，获取 Frp 的 Token
+		fin.open("AppLogin.dll"); // 打开文件
+		fin >> ifLogin; // 获取是否登录
+		if (ifLogin)
+		{
+			fin >> UserInternalID >> name >> password; // 如已登录，获取 Frp 的 Token
+		}
+		fin.close();
+		GetTunnel();
+		if (file("OnlineTunnel.list"))
+		{
+			fin.open("OnlineTunnel.list"); // 打开文件
+			fin >> OnlineLen; // 获取是否登录
+			for (int i = 0; i < OnlineLen; i++)
+			{
+				fin >> Online[i];
+				if (ifOnline(Online[i]))
+				{
+					Tunnel[FromIDFindTTunnelLen(Online[i])].online = true;
+				}else{
+					OnlineLen--;
+				}
+			}
+			fin.close();
+		}
 	}
-	fin.close();
-
-	PrintGUI(); // 打印 GUI
+	GetNode();
+	
+	system("cls");
+	PrintGUI1(); // 打印 GUI
 	while (true)
 	{
 		if (_kbhit()) // 判断是否有按按键
@@ -109,9 +155,9 @@ int main() // 主函数模块
 			char a = _getch(); // 判断按了啥键     
 			switch (a)
 			{
-				case '1':login(); break;
-				case '2':Unlogin(); break;
-				case '3':PrintGUI2(false); PrintGUI(); break;
+				case '1':login(); PrintGUI1(); break;
+				case '2':Unlogin(); PrintGUI1(); break;
+				case '3':main2(); PrintGUI1(); break;
 				case '4':break;
 				case '5':return 0; break;
 			}
@@ -119,12 +165,107 @@ int main() // 主函数模块
 		Sleep(20); // 防止卡 / 占用过多资源
 	}
 
-	system("pause"); // 防止退出-Debug
-
 	return 0;
 }
+inline void main2() // 隧道管理选择模块
+{
+	system("cls");
+	if (!ifLogin)
+	{
+		Cout(119, '-');
+		cout << "|";
+		Cout(117, ' ');
+		cout << "|\n|";
+		Cout(50, ' ');
+		color(4);
+		cout << "您当前尚未登录！";
+		color(9);
+		Cout(51, ' ');
+		cout << "|\n|";
+		Cout(117, ' ');
+		cout << "|\n";
+		Cout(119, '-');
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	PrintGUI2();
+	while (true)
+	{
+		if (_kbhit())
+		{
+			char a = _getch();
+			switch (a)
+			{
+			case 'D': Delete(); PrintGUI2(); break;
+			case 'C': Create(); PrintGUI2(); break;
+			case 'O': main3(); PrintGUI2(); break;
+			case 'R': system("cls"); return;
+			case 'd': Delete(); PrintGUI2(); break;
+			case 'c': Create(); PrintGUI2(); break;
+			case 'o': main3(); PrintGUI2(); break;
+			case 'r': system("cls"); return;
+			}
+		}
+		Sleep(20);
+	}
+	return;
+}
+inline void main3() // 映射选项选择模块
+{
+	system("cls");
+	if (MyTunnelLen == 0)
+	{
+		print("您没有任何一个隧道！", 48, 49);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	if (!file("FrpAuxiliaryApp.exe") && !ifAuxiliary) // 判断 FrpAuxiliaryApp.exe 是否存在，不存在就下载
+	{
+		Cout(119, '-');
+		cout << "|";
+		Cout(117, ' ');
+		cout << "|\n|";
+		Cout(49, ' ');
+		color(4);
+		cout << "正在下载辅助模块...";
+		color(9);
+		Cout(49, ' ');
+		cout << "|\n|";
+		Cout(117, ' ');
+		cout << "|\n";
+		Cout(119, '-');
+		string download_url = Json(Get("https://api.locyanfrp.cn/LoCyanFrpMSApp/AuxiliaryApp_update?version=114514").GetText(), "download_url"); // 获取下载地址
+		download_url = DEC(download_url, '\\'); // 删除转义符
+		URLDownloadToFile(nullptr, stringToLPCWSTR(download_url), L"DownLoadTEMP", 0, nullptr); // 下载
+		system("rename DownLoadTEMP FrpAuxiliaryApp.exe"); // 成功
+		system("cls");
+	}
+	ifAuxiliary = true;
 
-void login() // 重磅上场+++ 登录模块
+	PrintGUI3();
+	while (true)
+	{
+		if (_kbhit())
+		{
+			char a = _getch();
+			switch (a)
+			{
+				case 'S': Start(); PrintGUI3(); break;
+				case 'F': End(); PrintGUI3(); break;
+				case 'R': system("cls"); return;
+				case 's': Start(); PrintGUI3(); break;
+				case 'f': End(); PrintGUI3(); break;
+				case 'r': system("cls"); return;
+			}
+		}
+		Sleep(20);
+	}
+	return;
+}
+
+inline void login() // 登录模块
 {
 	if (ifLogin) // 如果已登录
 	{
@@ -144,7 +285,6 @@ void login() // 重磅上场+++ 登录模块
 		Cout(119, '-');
 		Sleep(2000); // 等待一会-让用户看清提示语
 		system("cls");
-		PrintGUI(); // 输出 GUI
 		return;
 	}
 	while (true) // 死循环保持在登录界面
@@ -205,16 +345,17 @@ void login() // 重磅上场+++ 登录模块
 			fout << 1 << " " << UserInternalID << " " << name << " " << password ;
 			fout.close();
 			ifLogin = true;
+			print("正在获取隧道...", 51, 51);
+			GetTunnel();
 			print("登录成功！", 53, 54);
 			Sleep(2000);
 			system("cls");
-			PrintGUI();
 			return;
 		}
 	}
 	return;
 }
-void PrintGUI() // 显示 GUI
+inline void PrintGUI1() // 显示 GUI
 {
 	color(9);
 	Cout(48, '-');
@@ -288,55 +429,8 @@ void PrintGUI() // 显示 GUI
 	}
 	return;
 }
-void PrintGUI2(bool ifGetNode) // 隧道管理选择模块
+inline void PrintGUI2() // 显示隧道管理模块 GUI
 {
-	if (!ifLogin)
-	{
-		system("cls");
-		Cout(119, '-');
-		cout << "|";
-		Cout(117, ' ');
-		cout << "|\n|";
-		Cout(50, ' ');
-		color(4);
-		cout << "您当前尚未登录！";
-		color(9);
-		Cout(51, ' ');
-		cout << "|\n|";
-		Cout(117, ' ');
-		cout << "|\n";
-		Cout(119, '-');
-		Sleep(2000);
-		system("cls");
-		PrintGUI();
-		return;
-	}
-	system("cls");
-	if (!file("Core.exe") && !ifCore)
-	{
-		system("cls");
-		Cout(119, '-');
-		cout << "|";
-		Cout(117, ' ');
-		cout << "|\n|";
-		Cout(49, ' ');
-		color(4);
-		cout << "正在下载辅助模块...";
-		color(9);
-		Cout(49, ' ');
-		cout << "|\n|";
-		Cout(117, ' ');
-		cout << "|\n";
-		Cout(119, '-');
-		URLDownloadToFile(nullptr, L"https://download.locyan.cn/d/LoCyanFrpMSApp/Core.exe", L"DownLoadTEMP", 0, nullptr);
-		system("rename DownLoadTEMP Core.exe");
-		system("cls");
-	}
-	ifCore = true;
-	if (!ifGetNode)
-	{
-		GetNode();
-	}
 	color(9);
 	Cout(48, '-');
 	color(5);
@@ -366,7 +460,7 @@ void PrintGUI2(bool ifGetNode) // 隧道管理选择模块
 	cout << "|\n|";
 	Cout(50, ' ');
 	color(6);
-	cout << "启动映射（按 O）";
+	cout << "映射选项（按 O）";
 	color(9);
 	Cout(51, ' ');
 	cout << "|\n|";
@@ -384,28 +478,52 @@ void PrintGUI2(bool ifGetNode) // 隧道管理选择模块
 	cout << "|\n";
 	color(9);
 	Cout(119, '-');
-	while (true)
-	{
-		if (_kbhit())
-		{
-			char a = _getch();
-			switch (a)
-			{
-				case 'D': Delete(); break;
-				case 'C': Create(); break;
-				case 'O': break;
-				case 'R': system("cls"); return;
-				case 'd': Delete(); break;
-				case 'c': Create(); break;
-				case 'o': break;
-				case 'r': system("cls"); return;
-			}
-		}
-		Sleep(20);
-	}
 	return;
 }
-void PrintNodeList() // 打印节点列表
+inline void PrintGUI3() // 显示映射选项模块 GUI
+{
+	color(9);
+	Cout(48, '-');
+	color(5);
+	cout << "LoCyan Frp 智能控制面板";
+	color(9);
+	Cout(48, '-');
+	cout << "|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(50, ' ');
+	color(6);
+	cout << "启动映射（按 S）";
+	color(9);
+	Cout(51, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(50, ' ');
+	color(6);
+	cout << "关闭映射（按 F）";
+	color(9);
+	Cout(51, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(50, ' ');
+	color(6);
+	cout << "返回上级（按 R）";
+	color(9);
+	Cout(51, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n";
+	color(9);
+	Cout(119, '-');
+	return;
+}
+inline void PrintNodeList() // 打印节点列表
 {
 	color(9);
 	Cout(48, '-');
@@ -520,8 +638,9 @@ void PrintNodeList() // 打印节点列表
 	cout << endl;
 	return;
 }
-void PrintTunnelList() // 打印隧道列表
+inline void PrintTunnelList(bool must_online, bool must_offline) // 打印隧道列表
 {
+	TestLen = 0;
 	color(9);
 	Cout(48, '-');
 	color(5);
@@ -623,6 +742,15 @@ void PrintTunnelList() // 打印隧道列表
 	cout << "|\n";
 	for (int i = 0; i < MyTunnelLen; i++)
 	{
+		if (must_online && !Tunnel[i].online)
+		{
+			continue;
+		}
+		if (must_offline && Tunnel[i].online)
+		{
+			continue;
+		}
+		TestLen++;
 		int an = Tunnel[i].ID;
 		b = Tunnel[i].Name, f = FromIDFindNodeName(Tunnel[i].Node);
 		len = numlen(an);
@@ -715,7 +843,6 @@ void PrintTunnelList() // 打印隧道列表
 				else {
 					cout << "Stcp";
 				}
-				len++;
 			}
 			color(8);
 			cout << "]";
@@ -741,7 +868,6 @@ void PrintTunnelList() // 打印隧道列表
 				if (Tunnel[i].Protocol == "http")
 				{
 					cout << "Http";
-					len++;
 				}
 				else {
 					cout << "Https";
@@ -756,7 +882,6 @@ void PrintTunnelList() // 打印隧道列表
 				else {
 					cout << "Stcp";
 				}
-				len++;
 			}
 			color(8);
 			cout << "]";
@@ -829,112 +954,112 @@ void PrintTunnelList() // 打印隧道列表
 		color(9);
 		cout << "|\n";
 	}
+	if (must_online)
+	{
+		Cout(119, '-');
+		cout << "|";
+		Cout(42, ' ');
+		color(4);
+		cout << "列表仅包含已在本地启动的隧道！";
+		color(9);
+		Cout(45, ' ');
+		cout << "|\n";
+	}
+	else if (must_offline)
+	{
+		Cout(119, '-');
+		cout << "|";
+		Cout(41, ' ');
+		color(4);
+		cout << "列表仅包含尚未在本地启动的隧道！";
+		color(9);
+		Cout(44, ' ');
+		cout << "|\n";
+	}
 	Cout(119, '-');
 	cout << endl;
 	return;
 }
-void GetNode() // 获取节点列表
+inline void GetNode() // 获取节点列表
 {
-	print("正在获取节点列表", 50, 51);
-	fout.open("SQLTransmission.sys");
-	fout << 1; // 对暗号。。。
+	if (_access("Temp", 0) == -1) // 判断日志文件夹是否存在
+	{
+		_mkdir("Temp");
+	}
+	fout.open(".\\Temp\\ServerList.sys");
+	fout << Get("https://api.locyanfrp.cn/LoCyanFrpMSApp/GetServerList").GetText();
 	fout.close();
-	system("Core");
-	fin.open("ServerList.sys");
+	fin.open(".\\Temp\\ServerList.sys");
 	fin >> Node_quantity; // 输入隧道数量
+	//cout << Node_quantity << "\n";
 	for (int i = 0; i < Node_quantity; i++)
 	{
 		fin >> Node[i].ID; // 输入隧道 ID
-		fin >> Node[i].Name >> Node[i].IP; // 输入隧道名、IP
+		//cout << Node[i].ID << " ";
+		fin >> Node[i].Name >> Node[i].IP >> Node[i].RealIP; // 输入隧道名、地址、IP
+		Node[i].Name = UTF8ToANSI(Node[i].Name), Node[i].IP = UTF8ToANSI(Node[i].IP), Node[i].RealIP = UTF8ToANSI(Node[i].RealIP);
+		//cout << Node[i].Name << " " << Node[i].IP << "\n";
 	}
 	fin.close();
-	system("cls");
-	Cout(119, '-');
-	cout << "|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(52, ' ');
-	color(4);
-	cout << "正在删除缓存";
-	color(9);
-	Cout(53, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n";
-	Cout(119, '-');
-	COORD coord = { 45 , 3 };
-	HANDLE hout = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleCursorPosition(hout, coord);
-	system("del /f /s /q SQLTransmission.sys"); // 删除与 Python 软件的发送文件
-	coord = { 45 , 4 };
-	hout = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleCursorPosition(hout, coord);
-	system("del /f /s /q ServerList.sys"); // 删除与 Python 软件的接收文件
-	system("cls");
+	//system("pause");
+	//system("del /f /s /q .\\Temp\\ServerList.sys>nul");
 	return;
 }
-void GetTunnel() // 获取隧道列表
+inline void GetTunnel() // 获取隧道列表
 {
-	print("正在获取隧道列表", 50, 51);
-	fout.open("SQLTransmission.sys");
-	fout << 2 << endl << UserInternalID; // 对暗号。。。
+	if (_access("Temp", 0) == -1) // 判断日志文件夹是否存在
+	{
+		_mkdir("Temp");
+	}
+	fout.open(".\\Temp\\MyServerList.dll");
+	fout << Get("https://api.locyanfrp.cn/LoCyanFrpMSApp/GetTunnelList?username=" + name).GetText();
 	fout.close();
-	system("Core");
-	fin.open("MyServerList.dll");
+	fin.open(".\\Temp\\MyServerList.dll");
 	fin >> MyTunnelLen; // 用户的隧道数量
 	for (int i = 0; i < MyTunnelLen; i++)
 	{
 		int temp;
 		fin >> Tunnel[i].ID;
-		fin >> Tunnel[i].Name >> Tunnel[i].internal_port >> Tunnel[i].external_port >> Tunnel[i].Protocol;
+		fin >> Tunnel[i].Name;
+		fin >> Tunnel[i].internal_port >> Tunnel[i].external_port;
+		fin >> Tunnel[i].Protocol;
 		fin >> Tunnel[i].Node >> Tunnel[i].a >> Tunnel[i].b >> temp;
 		if (temp)
 		{
 			fin >> Tunnel[i].url;
+			Tunnel[i].url = UTF8ToANSI(Tunnel[i].url);
 		}
 		fin >> Tunnel[i].IP;
-
+		Tunnel[i].Name = UTF8ToANSI(Tunnel[i].Name), Tunnel[i].Protocol = UTF8ToANSI(Tunnel[i].Protocol);
+		//cout << Tunnel[i].ID << " " << Tunnel[i].Name << " " << Tunnel[i].internal_port << " " << Tunnel[i].external_port << " " << Tunnel[i].Protocol << " " << Tunnel[i].Node << " " << Tunnel[i].a << " " << Tunnel[i].b << " " << temp << " " ;
+		//if (temp)
+		//{
+		//	cout << Tunnel[i].url << " " ;
+		//}
+		//cout << Tunnel[i].IP "\n";
 	}
 	fin.close();
-	system("cls");
-	Cout(119, '-');
-	cout << "|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(52, ' ');
-	color(4);
-	cout << "正在删除缓存";
-	color(9);
-	Cout(53, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n";
-	Cout(119, '-');
-	COORD coord = { 45 , 3 };
-	HANDLE hout = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleCursorPosition(hout, coord);
-	system("del /f /s /q SQLTransmission.sys");
-	coord = { 45 , 4 };
-	hout = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleCursorPosition(hout, coord);
-	system("del /f /s /q MyServerList.sys");
-	system("cls");
+	//system("pause");
+	//system("del /f /s /q .\\Temp\\MyServerList.dll>nul");
 	return;
 }
-void Delete() // 删除隧道模块
+inline void Delete() // 删除隧道模块
 {
 	system("cls");
-	GetTunnel();
-	PrintTunnelList();
-	string TunnelID, token, Return;
+	if (MyTunnelLen + 10 > 30)
+	{
+		system(("mode con cols=119 lines=" + to_string(MyTunnelLen + 10)).c_str()); // 设置窗口长宽高
+	}
+	if (MyTunnelLen == 0)
+	{
+		print("您没有任何一个隧道！", 48, 49);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	PrintTunnelList(false, false);
+	int TunnelID;
+	string token, Return;
 	cout << "|";
 	Cout(117, ' ');
 	cout << "|\n|";
@@ -960,30 +1085,41 @@ void Delete() // 删除隧道模块
 	cout << "要删除的隧道 ID：";
 	cin >> TunnelID;
 	system("cls");
+	if (!ifTunnel(TunnelID))
+	{
+		print("您不拥有该隧道！", 50, 51);
+	}
 	print("正在删除隧道", 52, 53);
 	token = Json(Get("https://api.locyanfrp.cn/User/DoLogin?username=" + name + "&password=" + password).GetText(),"token"); // 获取用于登录的 Token
-	Return = Json(Get("https://api.locyanfrp.cn/Proxies/Remove?proxyid=" + TunnelID + "&username=" + name + "&token=" + token).GetText(),"status"); // 尝试删除指定隧道，并获取返回值
-	if (Return == "0")
+	Return = Json(Get("https://api.locyanfrp.cn/Proxies/Remove?proxyid=" + to_string(TunnelID) + "&username=" + name + "&token=" + token).GetText(),"status"); // 尝试删除指定隧道，并获取返回值
+	system("mode con cols=119 lines=30"); // 设置窗口长宽高 
+	print("正在删除隧道", 52, 53);
+	if (Return == "true")
 	{
+		GetTunnel();
 		print("删除成功！", 53, 54);
 	}
 	else if (Return == "-1")
 	{
-		print("您不拥有此隧道！", 50, 51);
+		print("您不拥有该隧道！", 50, 51);
 	}
-	else if (Return == "-2")
+	else
 	{
 		print("未知错误！", 53, 54);
 	}
 	Sleep(2000);
 	system("cls");
-	PrintGUI2(true);
 	return;
 }
-void Create() // 创建隧道模块
+inline void Create() // 创建隧道模块
 {
-	string Tunnel_name, InlineIP, Protocol, InlinePort, OnlinePort, HTTPSdoname, token, Compress = "0", Encrypt = "0", ServerID, TryGet, Return;
+	string Tunnel_name, InlineIP, Protocol, InlinePort, OnlinePort, HTTPSdoname, token, Compress = "0", Encrypt = "0", TryGet, Return;
+	int ServerID;
 	system("cls");
+	if (Node_quantity + 17 > 30)
+	{
+		system(("mode con cols=119 lines=" + to_string(Node_quantity + 17)).c_str()); // 设置窗口长宽高
+	}
 	PrintNodeList();
 	cout << "|";
 	Cout(117, ' ');
@@ -1075,6 +1211,7 @@ void Create() // 创建隧道模块
 	SetConsoleCursorPosition(hout8, coord8);
 	cout << "节点 ID：";
 	cin >> ServerID;
+	string TestProtocol = Protocol;
 	if (Protocol == "tcp")
 	{
 		Protocol = "1";
@@ -1099,7 +1236,7 @@ void Create() // 创建隧道模块
 	{
 		Protocol = "6";
 	}
-	TryGet = "https://api.locyanfrp.cn/Proxies/add?username=" + name + "&name=" + Tunnel_name + "&key=" + UserInternalID + "&ip=" + InlineIP + "&type=" + Protocol + "&lp=" + InlinePort + "&rp=" + OnlinePort + "&ue=" + Encrypt + "&uz=" + Compress + "&id=" + ServerID;
+	TryGet = "https://api.locyanfrp.cn/Proxies/add?username=" + name + "&name=" + Tunnel_name + "&key=" + UserInternalID + "&ip=" + InlineIP + "&type=" + Protocol + "&lp=" + InlinePort + "&rp=" + OnlinePort + "&ue=" + Encrypt + "&uz=" + Compress + "&id=" + to_string(ServerID);
 	if (Protocol == "3" || Protocol == "4")
 	{
 		HANDLE hout9;
@@ -1112,11 +1249,19 @@ void Create() // 创建隧道模块
 	}
 	system("cls");
 	print("正在创建隧道", 52, 53);
+	system("mode con cols=119 lines=30"); // 设置窗口长宽高
+	if (ifNode(ServerID))
+	{
+		print("节点 ID 不存在！", 50, 51);
+	}
+	print("正在创建隧道", 52, 53);
 	TryGet = TryGet + "&token=" + Json(Get("https://api.locyanfrp.cn/User/DoLogin?username=" + name + "&password=" + password).GetText(), "token");
 	Return = Json(Get(TryGet).GetText(), "status");
 	system("cls");
-	if (Return == "0")
+	if (Return == "true")
 	{
+		print("正在创建隧道", 52, 53);
+		GetTunnel();
 		print("创建成功！", 53, 54);
 	}
 	else if (Return == "-1")
@@ -1135,20 +1280,192 @@ void Create() // 创建隧道模块
 	{
 		print("远程端口属于保留范围！",47, 48);
 	}
-	else if (Return == "-5")
-	{
-		print("未知错误！", 53, 54);
-	}
 	else if (Return == "-6")
 	{
 		print("隧道名被占用！", 51, 52);
 	}
+	else
+	{
+		print("未知错误！", 53, 54);
+	}
 	Sleep(2000);
 	system("cls");
-	PrintGUI2(true);
 	return;
 }
-void color(short attr) // 输出彩色文本，颜色值查询：Cmd -> color ?c
+inline void Start() // 启动隧道模块
+{
+	system("cls");
+	int id;
+	PrintTunnelList(false, true);
+	system("cls");
+	if (TestLen == 0)
+	{
+		print("您没有任何一个离线隧道！", 46, 47);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	if (TestLen + 13 > 30)
+	{
+		system(("mode con cols=119 lines=" + to_string(TestLen + 13)).c_str()); // 设置窗口长宽高
+	}
+	PrintTunnelList(false, true);
+	cout << "|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(42, ' ');
+	color(4);
+	cout << "隧道 ID 填好后请按 “回车” 键";
+	color(9);
+	Cout(45, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n";
+	Cout(119, '-');
+	HANDLE hout;
+	COORD coord = { 47 , TestLen + 7 };
+	hout = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout, coord); // 在第 35 行，第 MyTunnelLen + 6 列插入文字
+	cout << "要启动的隧道 ID：";
+	cin >> id;
+	if (!ifTunnel(id))
+	{
+		print("您不拥有该隧道！", 50, 51);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	print("正在启动中...", 52, 52);
+	if (ifOnline(id)) // 在线
+	{
+		print("该隧道已在异地启动！", 48, 49);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	fout.open("Frp-Name.log");
+	fout << id << " " << UserInternalID ;
+	fout.close();
+	system("start FrpAuxiliaryApp.exe");
+	int time = 0 ;
+	while (true)
+	{
+		if (ifOnline(id))
+		{
+			Tunnel[FromIDFindTTunnelLen(id)].online = true, Online[OnlineLen++] = id;
+			fout.open("OnlineTunnel.list"); // 打开文件
+			fout << OnlineLen << '\n'; // 获取是否登录
+			for (int i = 0; i < OnlineLen; i++)
+			{
+				fout << Online[i] << " ";
+			}
+			fout.close();
+			print("启动成功！", 53, 54);
+			Sleep(2000);
+			system("cls");
+			return;
+		}
+		Sleep(1000);
+		time += 3;
+		if (time > 20)
+		{
+			system("cls");
+			print("启动失败！请检查网络或查看日志！", 42, 43);
+			Sleep(2000);
+			system(("taskkill /f /im " + to_string(id) + ".exe").c_str());
+			system("cls");
+			return;
+		}
+	}
+	system("cls");
+	return;
+}
+inline void End() // 关闭映射模块
+{
+	system("cls");
+	int id;
+	PrintTunnelList(true, false);
+	system("cls");
+	if (TestLen == 0)
+	{
+		print("您没有启动任何一个隧道！", 46, 47);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	if (TestLen + 13 > 30)
+	{
+		system(("mode con cols=119 lines=" + to_string(TestLen + 13)).c_str()); // 设置窗口长宽高
+	}
+	PrintTunnelList(true, false);
+	cout << "|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(42, ' ');
+	color(4);
+	cout << "隧道 ID 填好后请按 “回车” 键";
+	color(9);
+	Cout(45, ' ');
+	cout << "|\n|";
+	Cout(117, ' ');
+	cout << "|\n";
+	Cout(119, '-');
+	HANDLE hout;
+	COORD coord = { 47 , TestLen + 7 };
+	hout = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleCursorPosition(hout, coord); // 在第 35 行，第 TestLen + 6 列插入文字
+	cout << "要关闭的隧道 ID：";
+	cin >> id;
+	if (!ifTunnel(id))
+	{
+		print("您不拥有该隧道！", 50, 51);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	print("正在关闭中...", 52, 52);
+	if (ifOnline(id)) // 离线
+	{
+		print("该隧道已离线！", 51, 52);
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	system(("taskkill /f /im " + to_string(id) + ".exe>nul").c_str());
+	print("关闭成功！", 53, 54);
+	Tunnel[FromIDFindTTunnelLen(id)].online = false;
+	int j = 0;
+	for (int i = 0 ; i < OnlineLen ; i++) {
+		if (Online[i] != id)
+		{
+			Online[j++] = Online[i];
+		}
+	}
+	OnlineLen--;
+	fout.open("OnlineTunnel.list"); // 打开文件
+	fout << OnlineLen << '\n'; // 获取是否登录
+	for (int i = 0; i < OnlineLen; i++)
+	{
+		fout << Online[i] << " ";
+	}
+	fin.close();
+	Sleep(2000);
+	system("cls");
+	return;
+}
+inline void color(short attr) // 输出彩色文本，颜色值查询：Cmd -> color ?c
 {
 	if (attr >= 0 && attr <= 15)
 	{
@@ -1158,8 +1475,8 @@ void color(short attr) // 输出彩色文本，颜色值查询：Cmd -> color ?c
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
 	}
 	return;
-}
-void Cout(int x, char a) // 连续输出 x 次 a
+} 
+inline void Cout(int x, char a) // 连续输出 x 次 a
 {
 	for (int i = 0; i < x; i++)
 	{
@@ -1167,7 +1484,7 @@ void Cout(int x, char a) // 连续输出 x 次 a
 	}
 	return;
 }
-void print(string s, int a, int b) // 输出提示语-大多情况下会格式错误。。。
+inline void print(string s, int a, int b) // 输出提示语-大多情况下会格式错误。。。
 {
 	system("cls");
 	color(9);
@@ -1185,7 +1502,7 @@ void print(string s, int a, int b) // 输出提示语-大多情况下会格式�
 	cout << "|\n";
 	Cout(119, '-');
 }
-void Unlogin() // 退出登录模块
+inline void Unlogin() // 退出登录模块
 {
 	if (!ifLogin) // 如果还没有登录
 	{
@@ -1205,7 +1522,6 @@ void Unlogin() // 退出登录模块
 		Cout(119, '-');
 		Sleep(2000);
 		system("cls");
-		PrintGUI();
 		return;
 	}
 	system("cls");
@@ -1234,15 +1550,14 @@ void Unlogin() // 退出登录模块
 	system("del /f /s /q AppLogin.dll"); // 把登陆文件删了
 	ifLogin = false; // 不要忘记再把变量清了
 	system("cls");
-	PrintGUI();
 	return;
 }
-void no() // 暂时不用临时代码存放位
+inline void no() // 暂时不用临时代码存放位
 {
 	return;
 }
 
-bool file(string filename) // 判断 filename 存不存在
+inline bool file(string filename) // 判断 filename 存不存在
 {
 	_file.open(filename, ios::in);
 	if (!_file)
@@ -1253,8 +1568,43 @@ bool file(string filename) // 判断 filename 存不存在
 	_file.close();
 	return true;
 }
+inline bool ifTunnel(int id) // 判断隧道是否存在 True / False
+{
+	for (int i = 0; i < MyTunnelLen; i++)
+	{
+		if (Tunnel[i].ID == id)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+inline bool ifNode(int id) // 判断节点是否存在 True / False
+{
+	for (int i = 0; i < Node_quantity; i++)
+	{
+		if (Node[i].ID == id)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+inline bool ifOnline(int id) // 获取隧道在线状态
+{
+	string Name = FromIDFindTunnelName(id), Protocol = FromIDFindProtocol(id), NodeID = to_string(FromIDFindNodeID(id)), Return = Json(Get("https://api.locyanfrp.cn/Proxies/GetOnlineStatus?type=" + Protocol + "&proxyname=" + Name + "&user=" + UserInternalID + "&node=" + NodeID).GetText(), "status"), Return2; // 获取 API 要用的信息
+	if (Return == "true") // 启动过
+	{
+		Return = Json(Get("https://api.locyanfrp.cn/Proxies/GetOnlineStatus?type=" + Protocol + "&proxyname=" + Name + "&user=" + UserInternalID + "&node=" + NodeID).GetText(), "online"); // 获取是否在线
+		if (Return == "online")
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
-int numlen(int num) // 获取一个数字的长度（位数）
+inline int numlen(int num) // 获取一个数字的长度（位数）
 {
 	int len = 0;
 	for (; num > 0; len++)
@@ -1263,8 +1613,39 @@ int numlen(int num) // 获取一个数字的长度（位数）
 	}
 	return len;
 }
+inline int FromIDFindNodeID(int id) // 根据隧道 ID 找节点 ID
+{
+	for (int i = 0; i < MyTunnelLen; i++)
+	{
+		if (Tunnel[i].ID == id)
+		{
+			return Tunnel[i].Node;
+		}
+	}
+}
+inline int FromIDFindTTunnelLen(int id) // 根据隧道 ID 找节点在数组中的下标
+{
+	for (int i = 0; i < MyTunnelLen; i++)
+	{
+		if (Tunnel[i].ID == id)
+		{
+			return i;
+		}
+	}
+} 
 
-string Json(string json , string project) // 获取 json 的 project 项的值
+inline string DEC(string url, char c) // 删除超链接中转义符
+{
+	for (string::iterator i = url.begin(); i != url.end(); i++)
+	{
+		if (*i == c)
+		{
+			url.erase(i--);
+		}
+	}
+	return url;
+}
+inline string Json(string json , string project) // 获取 json 的 project 项的值
 {
 	int json_start = json.find(project) + project.size() + 2 , json_finish = 0;
 	string json_return;
@@ -1283,9 +1664,9 @@ string Json(string json , string project) // 获取 json 的 project 项的值
 	json_return = json.substr(json_start, json_finish);
 	return json_return;
 }
-string FromIDFindNodeName(int id) // 根据节点 ID 找名字
+inline string FromIDFindNodeName(int id) // 根据节点 ID 找名字
 {
-	for (int i = 0; i <= Node_quantity; i++)
+	for (int i = 0; i < Node_quantity; i++)
 	{
 		if (Node[i].ID == id)
 		{
@@ -1294,7 +1675,37 @@ string FromIDFindNodeName(int id) // 根据节点 ID 找名字
 	}
 	return "节点获取失败！";
 }
-string LTS(string s) // 大写 -> 小写
+inline string FromIDFindNodeUrl(int id) // 根据节点 ID 找地址
+{
+	for (int i = 0; i < Node_quantity; i++)
+	{
+		if (Node[i].ID == id)
+		{
+			return Node[i].IP;
+		}
+	}
+}
+inline string FromIDFindTunnelName(int id) // 根据隧道 ID 找名字
+{
+	for (int i = 0; i < MyTunnelLen; i++)
+	{
+		if (Tunnel[i].ID == id)
+		{
+			return Tunnel[i].Name;
+		}
+	}
+}
+inline string FromIDFindProtocol(int id) // 根据隧道 ID 找隧道协议
+{
+	for (int i = 0; i < MyTunnelLen; i++)
+	{
+		if (Tunnel[i].ID == id)
+		{
+			return Tunnel[i].Protocol;
+		}
+	}
+}
+inline string LTS(string s) // 大写 -> 小写
 {
 	for (int i = 0; i < s.size(); i++)
 	{
@@ -1305,8 +1716,25 @@ string LTS(string s) // 大写 -> 小写
 	}
 	return s;
 }
+inline string UTF8ToANSI(string s)  // 将 UTF-8 编码转换为 ANSI
+{
+	BSTR    bstrWide;
+	char* pszAnsi;
+	int     nLength;
+	const char* pszCode = s.c_str();
+	nLength = MultiByteToWideChar(CP_UTF8, 0, pszCode, strlen(pszCode) + 1, NULL, NULL);
+	bstrWide = SysAllocStringLen(NULL, nLength);
+	MultiByteToWideChar(CP_UTF8, 0, pszCode, strlen(pszCode) + 1, bstrWide, nLength);
+	nLength = WideCharToMultiByte(CP_ACP, 0, bstrWide, -1, NULL, 0, NULL, NULL);
+	pszAnsi = new char[nLength];
+	WideCharToMultiByte(CP_ACP, 0, bstrWide, -1, pszAnsi, nLength, NULL, NULL);
+	SysFreeString(bstrWide);
+	string r(pszAnsi);
+	delete[] pszAnsi;
+	return r;
+}
 
-LPCWSTR stringToLPCWSTR(string orig) // 将 LPCWSTR 形式的字符串转化为 String 形式的字符串
+inline LPCWSTR stringToLPCWSTR(string orig) // 将 LPCWSTR 形式的字符串转化为 String 形式的字符串
 {
 	size_t origsize = orig.length() + 1;
 	const size_t newsize = 100;
@@ -1315,7 +1743,6 @@ LPCWSTR stringToLPCWSTR(string orig) // 将 LPCWSTR 形式的字符串转化为 
 	mbstowcs_s(&convertedChars, wcstring, origsize, orig.c_str(), _TRUNCATE);
 	return wcstring;
 }
-
 
 /* 注释：
 * 1.system("cls")：清屏

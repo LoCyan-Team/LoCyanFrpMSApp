@@ -49,7 +49,7 @@ fstream _file;
 ofstream fout;
 ifstream fin;
 
-string Frpc_version, App_version = "V1.0", Frp_Name, Frp_log;
+string Frpc_version, App_version = "V2.0", id , token, Frp_log;
 
 string Json(string json, string project) // 获取 json 的 project 项的值
 {
@@ -106,8 +106,6 @@ int main()
 {
     ShowWindow(GetForegroundWindow(), SW_HIDE); // 隐藏窗口，但是会闪一下-待改进
 
-
-
     if (_access("Logs", 0) == -1) // 判断日志文件夹是否存在
     {
         _mkdir("Logs");
@@ -116,14 +114,14 @@ int main()
     cout << "Reading Frpc Name......\n";
     FILE* FilePointer; // 文件安全指针
     fin.open("Frp-Name.log");
-    fin >> Frp_Name;
-    cout << "Frp name:" << Frp_Name << "\n";
+    fin >> id >> token;
+    cout << "Frp name:" << id << "\n";
     fin.close();
-    freopen_s(&FilePointer, (".\\Logs\\点我打开隧道 " + Frp_Name + " 的 Frpc 日志.bat").c_str(), "w", stdout); // 创建并打开文件
-    cout << ("taskkill /f /im " + Frp_Name + ".exe\nnotepad " + Frp_Name +".log"); // 输入一些 Bat 代码
-    freopen_s(&FilePointer, (".\\Logs\\点我打开隧道 " + Frp_Name + " 的 FrpAuxiliaryApp 日志.bat").c_str(), "w", stdout); // 创建并打开文件
-    cout << "taskkill /f /im FrpAuxiliaryApp.exe\ntaskkill /f /im " + Frp_Name + ".exe\nnotepad FrpAuxiliaryApp-" + Frp_Name + ".log"; // 输入一些 Bat 代码
-    Frp_log = ".\\Logs\\FrpAuxiliaryApp-" + Frp_Name + ".log";
+    freopen_s(&FilePointer, (".\\Logs\\点我打开隧道 ID 为 " + id + " 的 Frpc 日志.bat").c_str(), "w", stdout); // 创建并打开文件
+    cout << ("taskkill /f /im " + id + ".exe\nnotepad " + id +".log"); // 输入一些 Bat 代码
+    freopen_s(&FilePointer, (".\\Logs\\点我打开隧道 ID 为 " + id + " 的 FrpAuxiliaryApp 日志.bat").c_str(), "w", stdout); // 创建并打开文件
+    cout << "taskkill /f /im FrpAuxiliaryApp.exe\ntaskkill /f /im " + id + ".exe\nnotepad FrpAuxiliaryApp-" + id + ".log"; // 输入一些 Bat 代码
+    Frp_log = ".\\Logs\\FrpAuxiliaryApp-" + id + ".log";
     freopen_s(&FilePointer, Frp_log.c_str(), "w", stdout); // 创建并打开文件
 
 
@@ -191,24 +189,22 @@ int main()
 
 
     cout << "Starting Frpc......\n";
-    cout << "Deleting Frp-Name.log......\n";
-    system("del /f /s /q Frp-Name.log");
     if (_access("Temp", 0) == -1) // 判断日志文件夹是否存在
     {
-        cout << "Don't have .\\Temp\\, mkdiring......\n";
+        cout << "Don't have .\\Temp\\, mkdiring...\n";
         _mkdir("Temp");
     }
-    cout << "Copying......\nCmd return:";
+    cout << "Copying...\nCmd return:";
     system("copy Frpc.exe .\\Temp\\FRPC_TEMP");
-    cout << "Renameing......\n";
-    system(("rename .\\Temp\\FRPC_TEMP " + Frp_Name + ".exe").c_str());
-    cout << "Starting Frpc......\nThis log will be delete!";
-    freopen_s(&FilePointer, (".\\Logs\\" + Frp_Name + ".log").c_str(), "w", stdout); // 打开文件
-    system((".\\Temp\\" + Frp_Name + " -c Frp-Settings.ini").c_str()); // 启动隧道
+    cout << "Renameing...\n";
+    system(("rename .\\Temp\\FRPC_TEMP " + id + ".exe").c_str());
+    cout << "Starting Frpc...\nThis log will be delete!";
+    freopen_s(&FilePointer, (".\\Logs\\" + id + ".log").c_str(), "w", stdout); // 打开文件
+    system((".\\Temp\\" + id + " -u" + token + " -p" + id).c_str()); // 启动隧道
+    //system("del /f /s /q Frp-Settings.ini");
     freopen_s(&FilePointer, Frp_log.c_str(), "w", stdout); // 打开文件
-    cout << "Frpc is begin running, exiting......\n";
-    cout << "Deleting Frpc Temp......\n";
-    system(("del /f /s /q  .\\Temp\\" + Frp_Name + ".exe").c_str());
+    cout << "Deleting Frp-Settings.ini...\n";
+    cout << "Frpc is begin running, exiting...\n";
     cout << "Goodbye!";
     fclose(stdout); // 关闭文件输出
     return 0;

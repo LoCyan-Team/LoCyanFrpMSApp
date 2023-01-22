@@ -48,12 +48,11 @@
 * **$\color{green}{登录模块}$**
 * **$\color{green}{Core.exe 下载模块}$**
 * **$\color{green}{隧道管理模块}$**
-* **$\color{red}{隧道启动模块}$**
+* **$\color{green}{隧道启动模块}$**
 * **$\color{green}{隧道启动辅助模块}$**
 * **$\color{red}{更新检查}$**
-* 重要 BUG 修复版本强制更新
-* **$\color{red}{Core.exe 更新}$**
-* 显示程序版本、开发者、一些超链接
+* **$\color{red}{重要 BUG 修复版本强制更新}$**
+* **$\color{red}{显示程序版本、开发者、一些超链接}$**
 * 设计安装包
 * **$\color{green}{不使用 LoCyanFrp MySql 以达到全部开源}$**
 

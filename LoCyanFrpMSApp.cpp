@@ -41,6 +41,7 @@
 #include <direct.h> // 文件夹创建模块
 #include "requests.h" // 爬取网页模块
 #include "utils.h" // requests.h 的前置
+#define VERSION (string)"Indev 4.0"
 #pragma comment(lib, "Urlmon.lib")
 
 using namespace std; // cin / cout 定义模块
@@ -51,10 +52,13 @@ fstream _file;
 
 inline void main2(); // 隧道管理选择模块
 inline void main3(); // 映射选项选择模块
+inline void main4(); // 关于界面功能选择模块
 inline void login(); // 登录模块
+inline void Unlogin(); // 登出模块
 inline void PrintGUI1(); // 显示 GUI
 inline void PrintGUI2(); // 显示隧道管理模块 GUI
 inline void PrintGUI3(); // 显示映射选项模块 GUI
+inline void PrintGUI4(); // 显示关于模块 GUI
 inline void PrintNodeList(); // 打印节点列表
 inline void PrintTunnelList(bool must_online, bool must_offline); // 打印隧道列表
 inline void GetNode(); // 获取节点列表
@@ -66,7 +70,6 @@ inline void End(); // 关闭映射模块
 inline void color(short attr); // 输出彩色文字
 inline void Cout(int x, char a); // 连续输出 x 次 a
 inline void print(string s, int a, int b); // 输出提示语
-inline void Unlogin(); // 登出模块
 inline bool file(string filename); // 判断文件是否存在
 inline bool ifTunnel(int id); // 判断隧道是否存在
 inline bool ifNode(int id); // 判断节点是否存在 True
@@ -83,7 +86,7 @@ inline string FromIDFindProtocol(int id); // 根据隧道 ID 找隧道协议
 inline string LTS(string s); // 大写转小写
 inline string UTF8ToANSI(string s);  // 编码转换
 inline LPCWSTR stringToLPCWSTR(string orig); // LPCWSTR -> String
-string UserInternalID/* FrpToken */, name/* 用户名 */, password/* 密码 */;
+string UserInternalID/* FrpToken */, name/* 用户名 */, password/* 密码 */, Temp/* 更新缓存 */;
 bool ifLogin = false/* 是否已登录 */, ifAuxiliary = false /* 有没有下载辅助模块 */;
 int StartingTunnelList[100010], Node_quantity/* 节点数量 */, MyTunnelLen/* 用户的隧道数量 */, TestLen = 0/* 特殊情况下 PrintTunnelList 输出的隧道数 */, OnlineLen = 0/* 在线隧道数 */, Online[100010] = {}/* 在线隧道 */;
 
@@ -117,6 +120,84 @@ int main() // 主函数模块
 	system("cls");
 	print("正在执行初始化", 51, 52);
 
+	Temp = Get("https://api.locyanfrp.cn/LoCyanFrpMSApp/MSApp_update?version=" + VERSION).GetText();
+	if (Json(Temp, "needupdate") == "1")
+	{
+		string Return = Json(Temp, "important");
+		if (Return == "1")
+		{
+			print("正在更新中", 53, 54);
+			string download_url = Json(Temp, "download_url");
+			download_url = DEC(download_url, '\\');
+			URLDownloadToFile(nullptr, stringToLPCWSTR(download_url), L"UpdateTEMP", 0, nullptr);
+			fout.open("Update.bat"); // 创建并打开文件
+			fout << "@echo off\nif \"%1\" == \"h\" goto begin\nmshta vbscript:createobject(\"wscript.shell\").run(\"\"\"%~nx0\"\" h\",0)(window.close)&&exit\n:begin\nREM\ntaskkill /f /im LoCyanFrpMSApp.exe\ndel /f /s /q LoCyanFrpMSApp.exe\nrename UpdateTEMP LoCyanFrpMSApp.exe\nstart LoCyanFrpMSApp.exe";
+			fout.close();
+			system("start Update.bat");
+			return 0;
+		}else{
+			system("cls");
+			Cout(119, '-');
+			cout << "|";
+			Cout(117, ' ');
+			cout << "|\n|";
+			Cout(48, ' ');
+			color(14);
+			cout << "有新版本！是否更新？";
+			color(9);
+			Cout(49, ' ');
+			cout << "|\n|";
+			Cout(43, ' ');
+			color(2);
+			cout << "是（按 Y）";
+			color(9);
+			cout << "     |     ";
+			color(4);
+			cout << "否（按 N）";
+			color(9);
+			Cout(43, ' ');
+			cout << "|\n|";
+			Cout(117, ' ');
+			cout << "|\n";
+			Cout(119, '-');
+			while (true)
+			{
+				if (_kbhit()) // 判断是否有按按键
+				{
+					char a = _getch(); // 判断按了啥键     
+					switch (a)
+					{
+					case 'y': {
+						print("正在更新中", 53, 54);
+						string download_url = Json(Temp, "download_url");
+						download_url = DEC(download_url, '\\');
+						URLDownloadToFile(nullptr, stringToLPCWSTR(download_url), L"UpdateTEMP", 0, nullptr);
+						fout.open("Update.bat"); // 创建并打开文件
+						fout << "@echo off\nif \"%1\" == \"h\" goto begin\nmshta vbscript:createobject(\"wscript.shell\").run(\"\"\"%~nx0\"\" h\",0)(window.close)&&exit\n:begin\nREM\ntaskkill /f /im LoCyanFrpMSApp.exe\ndel /f /s /q LoCyanFrpMSApp.exe\nrename UpdateTEMP LoCyanFrpMSApp.exe\nstart LoCyanFrpMSApp.exe";
+						fout.close();
+						system("start Update.bat");
+						return 0;
+					}
+					case 'n':print("正在执行初始化", 51, 52); goto Go;
+					case 'Y': {
+						print("正在更新中", 53, 54);
+						string download_url = Json(Temp, "download_url");
+						download_url = DEC(download_url, '\\');
+						URLDownloadToFile(nullptr, stringToLPCWSTR(download_url), L"UpdateTEMP", 0, nullptr);
+						fout.open("Update.bat"); // 创建并打开文件
+						fout << "@echo off\nif \"%1\" == \"h\" goto begin\nmshta vbscript:createobject(\"wscript.shell\").run(\"\"\"%~nx0\"\" h\",0)(window.close)&&exit\n:begin\nREM\ntaskkill /f /im LoCyanFrpMSApp.exe\ndel /f /s /q LoCyanFrpMSApp.exe\nrename UpdateTEMP LoCyanFrpMSApp.exe\nstart LoCyanFrpMSApp.exe";
+						fout.close();
+						system("start Update.bat");
+						return 0;
+					}
+					case 'N':print("正在执行初始化", 51, 52); goto Go;
+					}
+				}
+				Sleep(20); // 防止卡 / 占用过多资源
+			}
+		}
+	}
+	Go:;
 	if (file("AppLogin.dll")) // 判断 FrpAuxiliaryApp.exe 是否存在，存在就读取
 	{
 		fin.open("AppLogin.dll"); // 打开文件
@@ -158,13 +239,12 @@ int main() // 主函数模块
 				case '1':login(); PrintGUI1(); break;
 				case '2':Unlogin(); PrintGUI1(); break;
 				case '3':main2(); PrintGUI1(); break;
-				case '4':break;
+				case '4':main4(); PrintGUI1(); break;
 				case '5':return 0; break;
 			}
 		}
 		Sleep(20); // 防止卡 / 占用过多资源
 	}
-
 	return 0;
 }
 inline void main2() // 隧道管理选择模块
@@ -264,6 +344,24 @@ inline void main3() // 映射选项选择模块
 	}
 	return;
 }
+inline void main4() // 关于界面功能选择模块
+{
+	PrintGUI4();
+	while (true)
+	{
+		if (_kbhit()) // 判断是否有按按键
+		{
+			char a = _getch(); // 判断按了啥键     
+			switch (a)
+			{
+				case 'R':system("cls"); return;
+				case 'r':system("cls"); return;
+			}
+		}
+		Sleep(20); // 防止卡 / 占用过多资源
+	}
+	return;
+}
 
 inline void login() // 登录模块
 {
@@ -353,6 +451,36 @@ inline void login() // 登录模块
 			return;
 		}
 	}
+	return;
+}
+inline void Unlogin() // 退出登录模块
+{
+	if (!ifLogin) // 如果还没有登录
+	{
+		system("cls");
+		Cout(119, '-');
+		cout << "|";
+		Cout(117, ' ');
+		cout << "|\n|";
+		Cout(50, ' ');
+		color(4);
+		cout << "您当前尚未登录！";
+		color(9);
+		Cout(51, ' ');
+		cout << "|\n|";
+		Cout(117, ' ');
+		cout << "|\n";
+		Cout(119, '-');
+		Sleep(2000);
+		system("cls");
+		return;
+	}
+	print("正在退出登录", 52, 53);
+	Sleep(2000);
+	system("del /f /s /q AppLogin.dll>nul"); // 把登陆文件删了
+	system("del /f /s /q OnlineTunnel.list>nul"); // 把本地启动隧道列表删了
+	ifLogin = false; // 不要忘记再把变量清了
+	system("cls");
 	return;
 }
 inline void PrintGUI1() // 显示 GUI
@@ -520,6 +648,138 @@ inline void PrintGUI3() // 显示映射选项模块 GUI
 	Cout(117, ' ');
 	cout << "|\n";
 	color(9);
+	Cout(119, '-');
+	return;
+}
+inline void PrintGUI4() // 显示关于模块 GUI
+{
+	system("cls");
+	color(9);
+	Cout(48, '-');
+	color(5);
+	cout << "LoCyan Frp 智能控制面板";
+	color(9);
+	Cout(48, '-');
+	cout << "|";
+	Cout(117, ' ');
+	cout << "|\n|";
+	Cout(43, ' ');
+	color(14);
+	cout << "LoCyanFrp Manager and Start App";
+	color(9);
+	Cout(43, ' ');
+	cout << "|\n|";
+	Cout(38, ' ');
+	color(10);
+	cout << "一个小而精致的 LoCyanFrp 隧道启动、管理器";
+	color(9);
+	Cout(38, ' ');
+	cout << "|\n|";
+	Cout(49, ' ');
+	cout << "Powered by";
+	color(6);
+	cout << " C++ ";
+	color(9);
+	cout << "/";
+	color(6);
+	cout << " C";
+	color(9);
+	Cout(50, ' ');
+	cout << "|\n|";
+	Cout(37, ' ');
+	color(8);
+	cout << "开发人员：";
+	color(11);
+	cout << "Zhiyuan";
+	color(9);
+	cout << " | ";
+	color(8);
+	cout <<	"技术支持：";
+	color(11);
+	cout << "Daiyangcheng";
+	color(9);
+	Cout(38, ' ');
+	cout << "|\n|";
+	Cout(31, ' ');
+	cout << "开源地址：";
+	color(11);
+	cout << "https://github.com/LoCyan-Team/LoCyanFrpMSApp";
+	color(9);
+	Cout(31, ' ');
+	cout << "|\n";
+	Cout(119, '-');
+	cout << "|";
+	string ver = "软件版本：" + VERSION;
+	int len = ver.length();
+	if ((40 - len) % 2 == 0)
+	{
+		int k = (40 - len) / 2;
+		Cout(k - 1, ' ');
+		cout << "软件版本：";
+		color(14);
+		cout << VERSION;
+		color(9);
+		Cout(40 - k - len, ' ');
+	}
+	else {
+		int k = (40 - len - 1) / 2;
+		Cout(k, ' ');
+		cout << "软件版本：";
+		color(14);
+		cout << VERSION;
+		color(9);
+		Cout(40 - k - len - 1, ' ');
+	}
+	cout << "|";
+	string c;
+	bool temp = false;
+	len = c.length();
+	if (Json(Temp, "needupdate") == "1")
+	{
+		temp = true;
+		c = "有新版本！";
+	}
+	else {
+		c = "此程序为最新版本！";
+	}
+	if ((60 - len) % 2 == 0)
+	{
+		int k = (60 - len) / 2;
+		Cout(k - 1, ' ');
+		if (temp)
+		{
+			color(4);
+		}
+		else {
+			color(2);
+		}
+		cout << c;
+		color(9);
+		Cout(60 - k - len, ' ');
+	}
+	else {
+		int k = (60 - len - 1) / 2;
+		Cout(k, ' ');
+		if (temp)
+		{
+			color(4);
+		}
+		else {
+			color(2);
+		}
+		cout << c;
+		color(9);
+		Cout(60 - k - len - 1, ' ');
+	}
+	cout << "|";
+	Cout(119, '-');
+	cout << "\n|";
+	Cout(54, ' ');
+	color(4);
+	cout << "按 R 退出";
+	color(9);
+	Cout(54, ' ');
+	cout << "|\n";
 	Cout(119, '-');
 	return;
 }
@@ -1500,7 +1760,7 @@ inline void Cout(int x, char a) // 连续输出 x 次 a
 	}
 	return;
 }
-inline void print(string s, int a, int b) // 输出提示语-大多情况下会格式错误。。。
+inline void print(string s, int a, int b) // 输出提示语-自行调整格式-中文占两个字符！
 {
 	system("cls");
 	color(9);
@@ -1517,50 +1777,6 @@ inline void print(string s, int a, int b) // 输出提示语-大多情况下会�
 	Cout(117, ' ');
 	cout << "|\n";
 	Cout(119, '-');
-}
-inline void Unlogin() // 退出登录模块
-{
-	if (!ifLogin) // 如果还没有登录
-	{
-		system("cls");
-		Cout(119, '-');
-		cout << "|";
-		Cout(117, ' ');
-		cout << "|\n|";
-		Cout(50, ' ');
-		color(4);
-		cout << "您当前尚未登录！";
-		color(9);
-		Cout(51, ' ');
-		cout << "|\n|";
-		Cout(117, ' ');
-		cout << "|\n";
-		Cout(119, '-');
-		Sleep(2000);
-		system("cls");
-		return;
-	}
-	system("cls");
-	Cout(119, '-');
-	cout << "|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(52, ' ');
-	color(4);
-	cout << "正在退出登录";
-	color(9);
-	Cout(53, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(117, ' ');
-	cout << "|\n|";
-	Cout(119, '-');
-	Sleep(2000);
-	system("del /f /s /q AppLogin.dll>nul"); // 把登陆文件删了
-	ifLogin = false; // 不要忘记再把变量清了
-	system("cls");
-	return;
 }
 inline void no() // 暂时不用临时代码存放位
 {

@@ -12,7 +12,7 @@
 - [X] Windows 10
 - [X] Windows 8.1
 - [X] Windows 8
-- [X] Windows 7 x64
+- [X] Windows 7 及以下
 
 ### 安装
 
@@ -20,9 +20,7 @@
 
 ### 编译
 
-* MySql
-* Visual Studio（安装 C++ 与 C，并手动配置 MySql）
-* Python 3.8
+* Visual Studio（安装 C++ 与 C）
 * [LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)
 
 编译 LoCyanFrpMSApp.cpp 与 Core.py ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe！

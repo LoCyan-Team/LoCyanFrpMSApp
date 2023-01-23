@@ -55,6 +55,6 @@
 
 ### 关于
 
-Powered by Daiyangcheng ( QQ:3143105972 ) and Zhiyuan ( QQ:3520974066 )!
+Powered by Daiyangcheng ( QQ:3143105972 ) and Zhiyuan ( QQ:2199718863 )!
 
 版权所有，侵权必究！

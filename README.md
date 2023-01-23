@@ -48,7 +48,7 @@
 * **$\color{green}{更新检查}$**
 * **$\color{green}{重要 BUG 修复版本强制更新}$**
 * **$\color{green}{显示程序版本、开发者、一些超链接}$**
-* **$\color{red}{设计安装包}$**
+* **$\color{green}{设计安装包}$**
 * **$\color{green}{不使用 LoCyanFrp MySql 以达到全部开源}$**
 
 注：已完成：**$\color{green}{绿色}$** | 正在完成：**$\color{red}{红色}$** | 已放弃：**$\color{blue}{绿色}$**

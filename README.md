@@ -21,9 +21,9 @@
 ### 编译
 
 * Visual Studio（安装 C++ 与 C）
-* [LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)
+* **[LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)**
 
-编译 LoCyanFrpMSApp.cpp 与 Core.py ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe！
+编译 LoCyanFrpMSApp.cpp 与 rpAuxiliaryApp.cpp ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe。
 
 ### 更新方向
 
@@ -42,7 +42,6 @@
 #### Indev 版本更新方向：
 
 * **$\color{green}{登录模块}$**
-* **$\color{green}{Core.exe 下载模块}$**
 * **$\color{green}{隧道管理模块}$**
 * **$\color{green}{隧道启动模块}$**
 * **$\color{green}{隧道启动辅助模块}$**

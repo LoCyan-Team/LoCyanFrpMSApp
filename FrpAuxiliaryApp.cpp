@@ -194,11 +194,13 @@ int main()
         cout << "Don't have .\\Temp\\, mkdiring...\n";
         _mkdir("Temp");
     }
-    cout << "Copying...\nCmd return:";
-    system("copy Frpc.exe .\\Temp\\FRPC_TEMP");
-    cout << "Renameing...\n";
-    system(("rename .\\Temp\\FRPC_TEMP " + id + ".exe").c_str());
-    cout << "Starting Frpc...\nThis log will be delete!";
+    if (!file(".\\Temp\\" + id + ".exe"))
+    {
+        cout << "Copying...\nCmd return:";
+        system("copy Frpc.exe .\\Temp\\FRPC_TEMP");
+        cout << "Renameing...\n";
+        system(("rename .\\Temp\\FRPC_TEMP " + id + ".exe").c_str());
+    }
     freopen_s(&FilePointer, (".\\Logs\\" + id + ".log").c_str(), "w", stdout); // 打开文件
     system((".\\Temp\\" + id + " -u" + token + " -p" + id).c_str()); // 启动隧道
     //system("del /f /s /q Frp-Settings.ini");

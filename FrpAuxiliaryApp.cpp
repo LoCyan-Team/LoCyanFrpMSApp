@@ -49,7 +49,7 @@ fstream _file;
 ofstream fout;
 ifstream fin;
 
-string Frpc_version, App_version = "V2.0", id , token, Frp_log;
+string Frpc_version, App_version = "V2.1", id , token, Frp_log;
 
 string Json(string json, string project) // 获取 json 的 project 项的值
 {

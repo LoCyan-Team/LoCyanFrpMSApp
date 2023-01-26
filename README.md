@@ -16,7 +16,7 @@
 
 ### 安装
 
-详见**[文档](https://doc.locyan.cn/#/LoCyanFrpMSApp?id=%e5%ae%89%e8%a3%85)**。
+详见 **[文档](https://doc.locyan.cn/#/LoCyanFrpMSApp?id=%e5%ae%89%e8%a3%85)** 。
 
 ### 编译
 

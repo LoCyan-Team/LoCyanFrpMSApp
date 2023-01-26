@@ -70,7 +70,7 @@ class LoCyanFrpMSApp {
                 ];
             return json($data);
         } else {
-            if (Request::get("version") == "Version 1.0 Rc 1"){
+            if (Request::get("version") == "Version 1.1"){
                 $data = [
                     "status"                => 0,
                     "needupdate"            => 0
@@ -79,10 +79,10 @@ class LoCyanFrpMSApp {
             } else {
                 $data = [
                     "status"                => 0,
-                    "important"             => 0,
+                    "important"             => 1,
                     "needupdate"            => 1,
-                    "version"               => "Version 1.0 Rc 1",
-                    "download_url"         => "https://download.locyan.cn/d/LoCyanFrpMSApp/MSApp/Version%201.0%20Rc%201.exe"
+                    "version"               => "Version 1.1",
+                    "download_url"         => "https://download.locyan.cn/d/LoCyanFrpMSApp/LoCyanFrpMSApp.exe"
                     ];
                 return json($data);
             }
@@ -97,6 +97,7 @@ class LoCyanFrpMSApp {
         return;
     }
     public function GetTunnelList(){
+        $http = new \app\common\Http;
         $username = Request::get("username");
         $rs = Db::table("proxies")->where("username", $username)->select()->toArray();
         echo(count($rs) . " ");
@@ -117,7 +118,7 @@ class LoCyanFrpMSApp {
                 $ue = "0";
             }
             
-            // 判断穿透协议以判断是否需要返回域名
+            // 是否存在域名
             if ($r["proxy_type"] != "http" && $r["proxy_type"] != "https"){
                 $domain_S = "0";
                 echo ($r["id"] . " " . $r["proxy_name"] . " " . $r["local_port"] . " " . $r["remote_port"] . " " . $r["proxy_type"] . " " . $r["node"] . " " . $uc . " " . $ue . " " . $domain_S . " " . $r["local_ip"] .  " ");

@@ -16,14 +16,14 @@
 
 ### 安装
 
-**$\color{Plum}{程序还尚未完成哦！敬请期待！}$**
+详见**[文档](https://doc.locyan.cn/#/LoCyanFrpMSApp?id=%e5%ae%89%e8%a3%85)**。
 
 ### 编译
 
 * Visual Studio（安装 C++ 与 C）
-* **[LoCyanFrp API](https://github.com/Daiyangcheng/LoCyanFrpAPI)**
+* **[LoCyanFrp API](https://github.com/LoCyan-Team/LoCyanFrpAPI)**
 
-编译 LoCyanFrpMSApp.cpp 与 rpAuxiliaryApp.cpp ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe。
+编译 LoCyanFrpMSApp.cpp 与 FrpAuxiliaryApp.cpp ，均编译完成后放在同一目录下，运行 LoCyanFrpMSApp.exe。
 
 ### 更新方向
 

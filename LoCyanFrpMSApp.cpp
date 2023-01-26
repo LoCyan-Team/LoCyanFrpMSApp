@@ -41,7 +41,7 @@
 #include <direct.h> // 文件夹创建模块
 #include "requests.h" // 爬取网页模块
 #include "utils.h" // requests.h 的前置
-#define VERSION (string)"Indev 4.0"
+#define VERSION (string)"Version 1.1"
 #pragma comment(lib, "Urlmon.lib")
 
 using namespace std; // cin / cout 定义模块
@@ -85,6 +85,7 @@ inline string FromIDFindTunnelName(int id); // 根据隧道 ID 找名字
 inline string FromIDFindProtocol(int id); // 根据隧道 ID 找隧道协议
 inline string LTS(string s); // 大写转小写
 inline string UTF8ToANSI(string s);  // 编码转换
+inline string ANSItoUTF8(string strAnsi); // 将 ANSI 编码转换为 UTF-8
 inline LPCWSTR stringToLPCWSTR(string orig); // LPCWSTR -> String
 string UserInternalID/* FrpToken */, name/* 用户名 */, password/* 密码 */, Temp/* 更新缓存 */;
 bool ifLogin = false/* 是否已登录 */, ifAuxiliary = false /* 有没有下载辅助模块 */;
@@ -424,6 +425,7 @@ inline void login() // 登录模块
 		SetConsoleCursorPosition(hout, coord); // 在第 47 行，第 3 列插入文字
 		cout << "用户名：";
 		cin >> name; // 用户名输入-以后要居中-待改进
+		name = ANSItoUTF8(name);
 		coord = { 47 , 5 };
 		hout = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleCursorPosition(hout, coord); // 在第 47 行，第 5 列插入文字
@@ -431,6 +433,8 @@ inline void login() // 登录模块
 		cin >> password; // 输入密码-以后要改成输入时隐藏-待改进
 		print("正在校验密码", 52, 53);
 		string Return = Json(Get("https://api.locyanfrp.cn/User/DoLogin?username=" + name + "&password=" + password).GetText() , "status"); // 查看密码是否正确
+		cout << "https://api.locyanfrp.cn/User/DoLogin?username=" + name + "&password=" + password;
+		system("pause");
 		if (Return == "-1")
 		{
 			print("用户名或密码错误！", 49, 50);
@@ -1959,7 +1963,21 @@ inline string UTF8ToANSI(string s)  // 将 UTF-8 编码转换为 ANSI
 	delete[] pszAnsi;
 	return r;
 }
-
+inline string ANSItoUTF8(string strAnsi) // 将 ANSI 编码转换为 UTF-8
+{
+	UINT nLen = MultiByteToWideChar(936, NULL, strAnsi.c_str(), -1, NULL, NULL);
+	WCHAR* wszBuffer = new WCHAR[nLen + 1];
+	nLen = MultiByteToWideChar(936, NULL, strAnsi.c_str(), -1, wszBuffer, nLen);
+	wszBuffer[nLen] = 0;
+	nLen = WideCharToMultiByte(CP_UTF8, NULL, wszBuffer, -1, NULL, NULL, NULL, NULL);
+	CHAR* szBuffer = new CHAR[nLen + 1];
+	nLen = WideCharToMultiByte(CP_UTF8, NULL, wszBuffer, -1, szBuffer, nLen, NULL, NULL);
+	szBuffer[nLen] = 0;
+	strAnsi = szBuffer;
+	delete[]wszBuffer;
+	delete[]szBuffer;
+	return strAnsi;
+}
 inline LPCWSTR stringToLPCWSTR(string orig) // 将 LPCWSTR 形式的字符串转化为 String 形式的字符串
 {
 	size_t origsize = orig.length() + 1;

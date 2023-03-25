@@ -19,7 +19,7 @@ class LoCyanFrpMSApp {
                 ];
             return json($data);
         } else {
-            if (Request::get("version") == "V0.46.1Plus"){
+            if (Request::get("version") == "V0.48.0"){
                 $data = [
                     "status"                => 0,
                     "needupdate"            => 0
@@ -30,8 +30,8 @@ class LoCyanFrpMSApp {
                     "status"                => 0,
                     "needupdate"            => 1,
                     "important"            => 1,
-                    "version"               => "V0.46.1Plus",
-                    "download_url"         => "https://download.locyan.cn/d/LoCyanFrpMSApp/LoCyanFrp/V0.46.1Plus.exe"
+                    "version"               => "V0.48.0",
+                    "download_url"         => "https://download.locyan.cn/d/LoCyanFrpMSApp/LoCyanFrp/V0.48.0.exe"
                     ];
                 return json($data);
             }
@@ -70,7 +70,7 @@ class LoCyanFrpMSApp {
                 ];
             return json($data);
         } else {
-            if (Request::get("version") == "Version 1.1"){
+            if (Request::get("version") == "Version 1.2"){
                 $data = [
                     "status"                => 0,
                     "needupdate"            => 0
@@ -79,9 +79,9 @@ class LoCyanFrpMSApp {
             } else {
                 $data = [
                     "status"                => 0,
-                    "important"             => 1,
+                    "important"             => 0,
                     "needupdate"            => 1,
-                    "version"               => "Version 1.1",
+                    "version"               => "Version 1.2",
                     "download_url"         => "https://download.locyan.cn/d/LoCyanFrpMSApp/LoCyanFrpMSApp.exe"
                     ];
                 return json($data);
@@ -92,7 +92,12 @@ class LoCyanFrpMSApp {
         $rs = Db::table("nodes")->select()->toArray();
         echo(count($rs) . " ");
         foreach ($rs as $r){
-            echo($r["id"] . " " . $r["name"] . " " . $r["hostname"] . " " . $r["ip"] . " ");
+            if ($r["status"] == 200){
+                $status = "0";
+            } else {
+                $status = "1";
+            }
+            echo($r["id"] . " " . $r["name"] . " " . $r["hostname"] . " " . $r["ip"] . " " . $status . " ");
         }
         return;
     }

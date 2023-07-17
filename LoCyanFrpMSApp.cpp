@@ -41,7 +41,7 @@
 #include <direct.h> // 文件夹创建模块
 #include "requests.h" // 爬取网页模块
 #include "utils.h" // requests.h 的前置
-#define VERSION (string)"Version 1.2"
+#define VERSION (string)"Version 1.3"
 #pragma comment(lib, "Urlmon.lib")
 
 using namespace std; // cin / cout 定义模块

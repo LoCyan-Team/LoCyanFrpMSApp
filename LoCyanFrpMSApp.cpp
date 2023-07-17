@@ -74,6 +74,7 @@ inline bool file(string filename); // 判断文件是否存在
 inline bool ifTunnel(int id); // 判断隧道是否存在
 inline bool ifNode(int id); // 判断节点是否存在 True
 inline bool ifOnline(int id); // 获取隧道在线状态
+inline int FromIDFindNodeLen(int id); // 根据节点 ID 找在数组中的下标
 inline int numlen(int num); // 获取一个数字的长度（位数）
 inline int FromIDFindNodeID(int id); // 根据隧道 ID 找节点 ID
 inline int FromIDFindTTunnelLen(int id); // 根据隧道 ID 找数组下标
@@ -102,7 +103,7 @@ struct Tunnelinfo
 	bool online = false;
 	int ID = 0, Node = 0, a = 0, b = 0;
 	string Name, Protocol, IP, url, internal_port, external_port;
-}Tunnel[100010];
+}Tunnel[1000010];
 
 int main() // 主函数模块
 {
@@ -433,7 +434,24 @@ inline void login() // 登录模块
 		hout = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleCursorPosition(hout, coord); // 在第 47 行，第 5 列插入文字
 		cout << "密码：";
-		cin >> password; // 输入密码-以后要改成输入时隐藏-待改进
+		char ch;
+		password = "";
+		while ((ch = _getch()) != '\r') // 读取输入字符，直到回车键被按下
+		{
+			if (ch == '\b') // 处理退格键
+			{
+				if (!password.empty())
+				{
+					password.pop_back(); // 删除末尾的字符
+					_putch('\b');     // 退格
+					_putch(' ');      // 输出空格覆盖原字符
+					_putch('\b');     // 退格回到原位置
+				}
+			}else{
+				password.push_back(ch); // 将输入字符保存到字符串中
+				_putch('*');         // 在终端上显示的字符用 "*" 填充
+			}
+		}
 		password = ANSItoUTF8(password);
 		print("正在校验密码", 52, 53);
 		string Return = Json(Get("https://api.locyanfrp.cn/User/DoLogin?username=" + name + "&password=" + password).GetText(), "status"); // 查看密码是否正确
@@ -1647,14 +1665,21 @@ inline void Start() // 启动隧道模块
 				fout << Online[i] << " ";
 			}
 			fout.close();
-			print("启动成功！", 53, 54);
-			Sleep(2000);
+			print("启动成功！访问地址已复制到剪贴板，按任意键继续", 35, 36);
+			string FrpUrl = Node[FromIDFindNodeLen(Tunnel[FromIDFindTTunnelLen(id)].Node)].IP + ":" + Tunnel[FromIDFindTTunnelLen(id)].external_port;
+			OpenClipboard(NULL), EmptyClipboard();
+			HGLOBAL hClipboardData = GlobalAlloc(GMEM_MOVEABLE, (FrpUrl.length() + 1) * sizeof(char));
+			char* pClipboardData = static_cast<char*>(GlobalLock(hClipboardData));
+			strcpy_s(pClipboardData, FrpUrl.length() + 1, FrpUrl.c_str());
+			GlobalUnlock(hClipboardData), SetClipboardData(CF_TEXT, hClipboardData);  // 复制内容到剪贴板
+			CloseClipboard();
+			_getch();
 			system("cls");
 			return;
 		}
 		Sleep(1000);
 		time += 3;
-		if (time > 20)
+		if (time > 60)
 		{
 			system("cls");
 			print("启动失败！请检查网络或查看日志！", 42, 43);
@@ -1853,16 +1878,6 @@ inline bool ifOnline(int id) // 获取隧道在线状态
 	}
 	return false;
 }
-
-inline int numlen(int num) // 获取一个数字的长度（位数）
-{
-	int len = 0;
-	for (; num > 0; len++)
-	{
-		num /= 10;
-	}
-	return len;
-}
 inline int FromIDFindNodeID(int id) // 根据隧道 ID 找节点 ID
 {
 	for (int i = 0; i < MyTunnelLen; i++)
@@ -1872,6 +1887,15 @@ inline int FromIDFindNodeID(int id) // 根据隧道 ID 找节点 ID
 			return Tunnel[i].Node;
 		}
 	}
+}
+inline int numlen(int num) // 获取一个数字的长度（位数）
+{
+	int len = 0;
+	for (; num > 0; len++)
+	{
+		num /= 10;
+	}
+	return len;
 }
 inline int FromIDFindTTunnelLen(int id) // 根据隧道 ID 找节点在数组中的下标
 {
@@ -1883,7 +1907,16 @@ inline int FromIDFindTTunnelLen(int id) // 根据隧道 ID 找节点在数组中
 		}
 	}
 }
-
+inline int FromIDFindNodeLen(int id) // 根据节点 ID 找在数组中的下标
+{
+	for (int i = 0; i < Node_quantity; i++)
+	{
+		if (Node[i].ID == id)
+		{
+			return i;
+		}
+	}
+}
 inline string DEC(string url, char c) // 删除超链接中转义符
 {
 	for (string::iterator i = url.begin(); i != url.end(); i++)

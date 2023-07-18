@@ -41,7 +41,7 @@
 #include <direct.h> // 文件夹创建模块
 #include "requests.h" // 爬取网页模块
 #include "utils.h" // requests.h 的前置
-#define VERSION (string)"Version 1.3"
+#define VERSION (string)"Version 1.4"
 #pragma comment(lib, "Urlmon.lib")
 
 using namespace std; // cin / cout 定义模块
@@ -447,7 +447,8 @@ inline void login() // 登录模块
 					_putch(' ');      // 输出空格覆盖原字符
 					_putch('\b');     // 退格回到原位置
 				}
-			}else{
+			}
+			else {
 				password.push_back(ch); // 将输入字符保存到字符串中
 				_putch('*');         // 在终端上显示的字符用 "*" 填充
 			}
@@ -1412,6 +1413,12 @@ inline void Delete() // 删除隧道模块
 }
 inline void Create() // 创建隧道模块
 {
+	system("cls");
+	print("紧急错误，正在修复", 49, 50);
+	Sleep(2000);
+	system("cls");
+	return;
+
 	string Tunnel_name, InlineIP, Protocol, InlinePort, OnlinePort, HTTPSdoname, token, Compress = "0", Encrypt = "0", TryGet, Return;
 	int ServerID;
 	system("cls");

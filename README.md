@@ -51,7 +51,7 @@
 * **$\color{green}{设计安装包}$**
 * **$\color{green}{不使用 LoCyanFrp MySql 以达到全部开源}$**
 
-注：已完成：**$\color{green}{绿色}$** | 正在完成：**$\color{red}{红色}$** | 已放弃：**$\color{blue}{绿色}$**
+注：已完成：**$\color{green}{绿色}$** | 正在完成：**$\color{red}{红色}$** | 已放弃：**$\color{blue}{蓝色}$**
 
 ### 关于
 

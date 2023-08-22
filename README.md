@@ -1,4 +1,4 @@
-## LoCyanFrpMSApp（已停止支持，请移步至 [LoCyanFrpCSDesktop](https://github.com/LoCyan-Team/LoCyanFrpCSDesktop)）
+### LoCyanFrpMSApp（已停止支持，请移步至 [LoCyanFrpCSDesktop](https://github.com/LoCyan-Team/LoCyanFrpCSDesktop)）
 
 一个小而精致的 LoCyanFrp 隧道启动、管理器，全名为 **LoCyanFrp Manager and Start App**。
 
